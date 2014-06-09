@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="pull_to_refresh">下拉可以刷新</string>
+    <string name="release_to_refresh">释放立即刷新</string>
+    <string name="refreshing">正在刷新…</string>
+    <string name="not_updated_yet">暂未更新过</string>
+    <string name="updated_at">上次更新于%1$s前</string>
+    <string name="updated_just_now">刚刚更新</string>
+    <string name="time_error">时间有问题</string>
+    <string name="app_name">Coco音乐播放器</string>
+    <string name="hello_world">Hello world!</string>
+    <string name="action_settings">Settings</string>
+    <string name="audio_str">设为铃声</string>
+    <string name="setList_str">歌单</string>
+    <string name="info_str">信息</string>
+    <string name="delete_str">删除</string>
+    <string name="playRandom_str">随便听听</string>
+    <string name="notiTitleDefault_str">没有播放歌曲</string>
+    <string name="logout_str">退出</string>
+
+</resources>

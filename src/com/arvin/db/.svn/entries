@@ -1,0 +1,52 @@
+8
+
+dir
+2
+https://20140323-3830.kugou.gz:8443/svn/MyProject/cocoplay/src/com/arvin/db
+https://20140323-3830.kugou.gz:8443/svn/MyProject
+
+
+
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+6625e45a-36ad-2543-894e-e411b980cf25
+
+DBHelper.java
+file
+
+
+
+
+2014-05-09T10:46:43.156000Z
+8f3dc34a2313b1476a40a6de5b04fb23
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+
+Mp3DBManager.java
+file
+
+
+
+
+2014-05-09T11:37:56.270000Z
+b7afcecf15f73707c854d7b7bdcbadfe
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+

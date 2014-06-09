@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="claert_red">#990505</color>
+    <color name="light_black">#0D0D0D</color>
+    <color name="tran_light_black">#990D0D0D</color>
+    <color name="op_bg">#282626</color>
+    <color name="item_bg">#C3BEBA</color>
+    <color name="transport">#00000000</color>
+    <color name="itemfont_color">#3C3B3A</color>
+    <color name="charRow">#C6C8CA</color>
+    <color name="noti_bg">#00000000</color>
+</resources>

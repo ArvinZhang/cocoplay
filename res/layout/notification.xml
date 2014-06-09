@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:padding="0dp"
+    android:layout_height="match_parent" >
+    
+    <ImageView 
+        android:id="@+id/notification_img"
+        android:layout_width="60dp"
+        android:layout_height="match_parent"
+        android:padding="2dp"
+        android:src="@drawable/playing_bar_default_avatar"
+        />
+    
+    <LinearLayout
+        android:id="@+id/notification_songinfo_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@+id/notification_img"
+        android:layout_toLeftOf="@+id/notification_playbtn_layout"
+        android:orientation="vertical"
+        android:paddingLeft="5dp"
+        >
+        
+        <TextView 
+            android:id="@+id/notification_title_text"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:singleLine="true"
+            android:ellipsize="marquee"
+            android:text="@string/notiTitleDefault_str"
+            android:textSize="18sp"
+            android:textColor="#FFF"
+            android:gravity="bottom"
+            />
+        
+        <TextView 
+            android:id="@+id/notification_singer_text"
+            android:layout_width="wrap_content"
+            android:layout_height="30dp"
+            android:singleLine="true"
+            android:textSize="14sp"
+            android:gravity="center_vertical"
+            />
+        
+    </LinearLayout>
+    
+    <LinearLayout 
+        android:id="@+id/notification_playbtn_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="match_parent"
+        android:layout_alignParentRight="true"
+        android:orientation="horizontal"
+        >
+        
+        <ImageView 
+            android:id="@+id/notification_playorpause_img"
+            android:layout_width="50dp"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:clickable="true"
+            android:background="@drawable/noti_btn_bg"
+            android:src="@drawable/statusbar_btn_play"
+            />
+        
+        <ImageView 
+            android:id="@+id/notification_next_img"
+            android:layout_width="40dp"
+            android:layout_height="match_parent"
+            android:padding="10dp"
+            android:clickable="true"
+            android:background="@drawable/noti_btn_bg"
+            android:src="@drawable/statusbar_btn_next"
+            />
+        
+    </LinearLayout>
+
+</RelativeLayout>

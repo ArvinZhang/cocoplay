@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="80dp"
+    android:id="@+id/widget_layout"
+    android:padding="0dp"
+    android:clickable="true"
+    android:background="@drawable/songitem_btn_bg" >
+
+    <ImageView
+        android:id="@+id/widget_album_img"
+        android:layout_width="80dp"
+        android:layout_height="match_parent"
+        android:layout_alignParentLeft="true"
+        android:layout_centerVertical="true"
+        android:layout_margin="0dp"
+        android:padding="3dp"
+        android:src="@drawable/playing_bar_default_avatar" />
+    
+    <RelativeLayout 
+        android:id="@+id/widget_song_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_toRightOf="@+id/widget_album_img"
+        >
+        <TextView
+            android:id="@+id/widget_songname_text"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="rolling in the deep rolling in the deep rolling in the deep"
+            android:singleLine="true"
+            android:textColor="#FFF"
+            android:paddingTop="6dp"
+            android:paddingRight="3dp"
+            />
+
+        <ProgressBar
+            android:id="@+id/widget_progressbar"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="2dp"
+            android:layout_below="@+id/widget_songname_text"
+            android:layout_marginTop="10dp"
+            android:paddingRight="3dp"
+            android:indeterminateDrawable="@drawable/custom_progressbar"
+            />
+        
+        <RelativeLayout 
+            android:id="@+id/widget_op_layout"
+            android:layout_below="@+id/widget_progressbar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingRight="3dp"
+            >
+            <ImageView 
+                android:id="@+id/widget_op_previous"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/btn_simple_previous"
+                android:layout_toLeftOf="@+id/widget_op_playorpause"
+                android:layout_centerVertical="true"
+                android:clickable="true"
+                />
+            
+            <ImageView 
+                android:id="@+id/widget_op_playorpause"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/btn_simple_play"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_centerInParent="true"
+                android:clickable="true"
+                />
+            <ImageView 
+                android:id="@+id/widget_op_next"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:src="@drawable/btn_simple_next"
+                android:layout_toRightOf="@+id/widget_op_playorpause"
+                android:layout_centerVertical="true"
+                android:clickable="true"
+                />
+        </RelativeLayout>
+        
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,40 @@
+8
+
+dir
+2
+https://20140323-3830.kugou.gz:8443/svn/MyProject/cocoplay/res/values-v11
+https://20140323-3830.kugou.gz:8443/svn/MyProject
+
+
+
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+6625e45a-36ad-2543-894e-e411b980cf25
+
+styles.xml
+file
+
+
+
+
+2014-05-05T02:18:31.524000Z
+24fb27e6233452a73dacf3d88af74527
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+

@@ -1,0 +1,52 @@
+8
+
+dir
+2
+https://20140323-3830.kugou.gz:8443/svn/MyProject/cocoplay/src/com/arvin/pojo
+https://20140323-3830.kugou.gz:8443/svn/MyProject
+
+
+
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+
+
+svn:special svn:externals svn:needs-lock
+
+
+
+
+
+
+
+
+
+
+
+6625e45a-36ad-2543-894e-e411b980cf25
+
+Lyric.java
+file
+
+
+
+
+2014-06-03T11:59:47.458000Z
+df1d2f9641e5c203008707c4907a7865
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+
+Mp3.java
+file
+
+
+
+
+2014-05-09T10:18:59.707000Z
+444b8077cc75baef51a3c851d5fbfff4
+2014-06-04T06:48:57.324788Z
+2
+arvinzhang
+

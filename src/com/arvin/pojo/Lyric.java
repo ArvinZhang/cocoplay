@@ -1,0 +1,31 @@
+package com.arvin.pojo;
+
+/**
+ * @Title: Lyric.java
+ * @Package com.arvin.pojo
+ * @Description: TODO(用一句话描述该文件做什么)
+ * @author arvinzhang
+ * @date 2014年6月3日 下午5:05:51
+ * @version V1.0
+ */
+public class Lyric {
+	private String lrc;
+	private int timeInMsec;
+
+	public String getLrc() {
+		return lrc;
+	}
+
+	public void setLrc(String lrc) {
+		this.lrc = lrc;
+	}
+
+	public int getTimeInMsec() {
+		return timeInMsec;
+	}
+
+	public void setTimeInMsec(int timeInSec) {
+		this.timeInMsec = timeInSec;
+	}
+
+}
