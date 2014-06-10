@@ -86,28 +86,28 @@ public class LyricView extends TextView {
 		notCurrentPaint.setTextSize(notCurrentTextSize);
 		notCurrentPaint.setTypeface(Typeface.DEFAULT);
 
-//		try {
-//			setText("");
-//			canvas.drawText(lrcList.get(index).getLrc(), width / 2, height / 2, currentPaint);
-//
-//			float tempY = height / 2;
-//			// 画出本句之前的句子
-//			for (int i = index - 1; i >= 0; i--) {
-//				// 向上推移
-//				tempY = tempY - textHeight;
-//				canvas.drawText(lrcList.get(i).getLrc(), width / 2, tempY,	notCurrentPaint);
-//			}
-//			tempY = height / 2;
-//			// 画出本句之后的句子
-//			for (int i = index + 1; i < lrcList.size(); i++) {
-//				// 往下推移
-//				tempY = tempY + textHeight;
-//				canvas.drawText(lrcList.get(i).getLrc(), width / 2, tempY,
-//						notCurrentPaint);
-//			}
-//		} catch (Exception e) {
-//			setText("...木有歌词文件，赶紧去下载...");
-//		}
+		try {
+			setText("");
+			canvas.drawText(lrcList.get(index).getLrc(), width / 2, height / 2, currentPaint);
+
+			float tempY = height / 2;
+			// 画出本句之前的句子
+			for (int i = index - 1; i >= 0; i--) {
+				// 向上推移
+				tempY = tempY - textHeight;
+				canvas.drawText(lrcList.get(i).getLrc(), width / 2, tempY,	notCurrentPaint);
+			}
+			tempY = height / 2;
+			// 画出本句之后的句子
+			for (int i = index + 1; i < lrcList.size(); i++) {
+				// 往下推移
+				tempY = tempY + textHeight;
+				canvas.drawText(lrcList.get(i).getLrc(), width / 2, tempY,
+						notCurrentPaint);
+			}
+		} catch (Exception e) {
+			setText("...木有歌词文件，赶紧去下载...");
+		}
 	}
 
 	/**
