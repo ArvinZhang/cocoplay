@@ -1,7 +1,6 @@
 package com.arvin.cocoplay;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -27,7 +26,6 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
-import android.view.animation.AnimationUtils;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
@@ -44,7 +42,6 @@ import com.arvin.custom.RefreshableView;
 import com.arvin.custom.RefreshableView.PullToRefreshListener;
 import com.arvin.custom.SideBar;
 import com.arvin.custom.SideBar.OnTouchingLetterChangedListener;
-import com.arvin.pojo.Lyric;
 import com.arvin.pojo.Mp3;
 import com.arvin.tools.Blur;
 import com.arvin.tools.FileUtils;

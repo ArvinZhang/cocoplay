@@ -47,8 +47,8 @@ public class LyricView extends View {
 	private int lrcIndex = 0; // 保存歌词TreeMap的下标
 	private int SIZEWORD = 0; // 显示歌词文字的大小值
 	private int INTERVAL = 20; // 歌词每行的间隔
-	Paint paint = new Paint(); // 画笔，用于画不是高亮的歌词
-	Paint paintHL = new Paint(); // 画笔，用于画高亮的歌词，即当前唱到这句歌词
+	TextPaint paint = new TextPaint(); // 画笔，用于画不是高亮的歌词
+	TextPaint paintHL = new TextPaint(); // 画笔，用于画高亮的歌词，即当前唱到这句歌词
 	private Context context;
 
 	public LyricView(Context context) {
@@ -71,14 +71,14 @@ public class LyricView extends View {
 			Lyric temp = lrc_map.get(lrcIndex);
 //			canvas.drawText(temp.getLrc(), mX, offsetY + (SIZEWORD + INTERVAL)
 //					* lrcIndex, paintHL);
-			TextPaint textPaint = new TextPaint();  
-		    textPaint.setARGB(0xFF, 0, 0, 0);  
-		    textPaint.setTextSize(SIZEWORD);
-			Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
-			StaticLayout layout = new StaticLayout(temp.getLrc(), textPaint,  
-					display.getWidth() - 4,  
+			
+			int screenWidth = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
+			int textZoneWidth = screenWidth - 20;
+			
+			StaticLayout layout = new StaticLayout(temp.getLrc(), paintHL,  
+		            textZoneWidth,  
 		            Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);  
-		    canvas.translate(2, 0); 
+		    canvas.translate(10 + Math.abs(textZoneWidth-temp.getLrc().length()*SIZEWORD)/2, 0);
 		    layout.draw(canvas);
 			
 			// 画当前歌词之前的歌词
@@ -103,7 +103,7 @@ public class LyricView extends View {
 			paint.setTextSize(25);
 			canvas.drawText("找不到歌词", mX, 310, paint);
 		}
-		super.onDraw(canvas);
+		//super.onDraw(canvas);
 	}
 
 	@Override
@@ -133,14 +133,12 @@ public class LyricView extends View {
 		lrc_map = new TreeMap<Integer, Lyric>(); // TreeMap中元素的排列是有序的（HashMap中元素的排列顺序是不固定的）
 		offsetY = 320;
 
-		paint = new Paint();
 		paint.setTextAlign(Paint.Align.CENTER);
-		paint.setColor(Color.GREEN);
+		paint.setColor(Color.BLUE);
 		paint.setAntiAlias(true); // 防止锯齿
 		paint.setDither(true); // 防抖动
 		paint.setAlpha(180); // 设置透明度（0-255），值越小越透明
 
-		paintHL = new Paint();
 		paintHL.setTextAlign(Paint.Align.CENTER);
 
 		paintHL.setColor(Color.RED);
