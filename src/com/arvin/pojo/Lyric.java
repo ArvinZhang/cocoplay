@@ -9,8 +9,34 @@ package com.arvin.pojo;
  * @version V1.0
  */
 public class Lyric {
-	private String lrc;
-	private int timeInMsec;
+	private int begintime; // 开始时间
+	private int endtime; // 结束时间
+	private int timeline; // 单句歌词用时
+	private String lrc; // 单句歌词
+
+	public int getBegintime() {
+		return begintime;
+	}
+
+	public void setBegintime(int begintime) {
+		this.begintime = begintime;
+	}
+
+	public int getEndtime() {
+		return endtime;
+	}
+
+	public void setEndtime(int endtime) {
+		this.endtime = endtime;
+	}
+
+	public int getTimeline() {
+		return timeline;
+	}
+
+	public void setTimeline(int timeline) {
+		this.timeline = timeline;
+	}
 
 	public String getLrc() {
 		return lrc;
@@ -18,14 +44,6 @@ public class Lyric {
 
 	public void setLrc(String lrc) {
 		this.lrc = lrc;
-	}
-
-	public int getTimeInMsec() {
-		return timeInMsec;
-	}
-
-	public void setTimeInMsec(int timeInSec) {
-		this.timeInMsec = timeInSec;
 	}
 
 }

@@ -1,17 +1,30 @@
 package com.arvin.custom;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.util.Iterator;
+import java.util.TreeMap;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.graphics.Typeface;
+import android.text.Layout.Alignment;
+import android.text.StaticLayout;
+import android.text.TextPaint;
 import android.util.AttributeSet;
-import android.widget.TextView;
+import android.util.Log;
+import android.view.Display;
+import android.view.MotionEvent;
+import android.view.View;
+import android.view.WindowManager;
 
-import com.arvin.cocoplay.R;
 import com.arvin.pojo.Lyric;
 
 /**
@@ -22,105 +35,292 @@ import com.arvin.pojo.Lyric;
  * @date 2014年6月3日 下午5:07:53
  * @version V1.0
  */
-public class LyricView extends TextView {
-	private float width; // 歌词视图宽度
-	private float height; // 歌词视图高度
-	private Paint currentPaint; // 当前画笔对象
-	private Paint notCurrentPaint; // 非当前画笔对象
-	private float textHeight = 25; // 文本高度
-	private float notCurrentTextSize = 24; // 文本大小
-	private int index = 0; // list集合下标
+public class LyricView extends View {
 
-	private List<Lyric> lrcList = new ArrayList<Lyric>();
-
-	public void setmLrcList(List<Lyric> lrcList) {
-		this.lrcList = lrcList;
-	}
+	private static TreeMap<Integer, Lyric> lrc_map;
+	private float mX; // 屏幕X轴的中点，此值固定，保持歌词在X中间显示
+	private float offsetY; // 歌词在Y轴上的偏移量，此值会根据歌词的滚动变小
+	private static boolean blLrc = false;
+	private float touchY; // 当触摸歌词View时，保存为当前触点的Y轴坐标
+	private float touchX;
+	private boolean blScrollView = false;
+	private int lrcIndex = 0; // 保存歌词TreeMap的下标
+	private int SIZEWORD = 0; // 显示歌词文字的大小值
+	private int INTERVAL = 20; // 歌词每行的间隔
+	Paint paint = new Paint(); // 画笔，用于画不是高亮的歌词
+	Paint paintHL = new Paint(); // 画笔，用于画高亮的歌词，即当前唱到这句歌词
+	private Context context;
 
 	public LyricView(Context context) {
 		super(context);
-		init();
-	}
-
-	public LyricView(Context context, AttributeSet attrs, int defStyle) {
-		super(context, attrs, defStyle);
+		this.context = context;
 		init();
 	}
 
 	public LyricView(Context context, AttributeSet attrs) {
 		super(context, attrs);
+		this.context = context;
 		init();
 	}
 
-	private void init() {
-		setFocusable(true); 
-
-		// 高亮部分
-		currentPaint = new Paint();
-		currentPaint.setAntiAlias(true); // 设置抗锯齿，让文字美观饱满
-		currentPaint.setTextAlign(Paint.Align.CENTER);// 设置文本对齐方式
-
-		// 非高亮部分
-		notCurrentPaint = new Paint();
-		notCurrentPaint.setAntiAlias(true);
-		notCurrentPaint.setTextAlign(Paint.Align.CENTER);
-	}
-
-	/**
-	 * 绘画歌词
-	 */
 	@Override
 	protected void onDraw(Canvas canvas) {
+		if (blLrc) {
+			paintHL.setTextSize(SIZEWORD);
+			paint.setTextSize(SIZEWORD);
+			Lyric temp = lrc_map.get(lrcIndex);
+//			canvas.drawText(temp.getLrc(), mX, offsetY + (SIZEWORD + INTERVAL)
+//					* lrcIndex, paintHL);
+			TextPaint textPaint = new TextPaint();  
+		    textPaint.setARGB(0xFF, 0, 0, 0);  
+		    textPaint.setTextSize(SIZEWORD);
+			Display display = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay();
+			StaticLayout layout = new StaticLayout(temp.getLrc(), textPaint,  
+					display.getWidth() - 4,  
+		            Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);  
+		    canvas.translate(2, 0); 
+		    layout.draw(canvas);
+			
+			// 画当前歌词之前的歌词
+			for (int i = lrcIndex - 1; i >= 0; i--) {
+				temp = lrc_map.get(i);
+				if (offsetY + (SIZEWORD + INTERVAL) * i < 0) {
+					break;
+				}
+				canvas.drawText(temp.getLrc(), mX, offsetY
+						+ (SIZEWORD + INTERVAL) * i, paint);
+			}
+			// 画当前歌词之后的歌词
+			for (int i = lrcIndex + 1; i < lrc_map.size(); i++) {
+				temp = lrc_map.get(i);
+				if (offsetY + (SIZEWORD + INTERVAL) * i > 600) {
+					break;
+				}
+				canvas.drawText(temp.getLrc(), mX, offsetY
+						+ (SIZEWORD + INTERVAL) * i, paint);
+			}
+		} else {
+			paint.setTextSize(25);
+			canvas.drawText("找不到歌词", mX, 310, paint);
+		}
 		super.onDraw(canvas);
-		if (canvas == null) {
-			return;
+	}
+
+	@Override
+	public boolean onTouchEvent(MotionEvent event) {
+		System.out.println("bllll===" + blScrollView);
+		float tt = event.getY();
+		if (!blLrc) {
+			return super.onTouchEvent(event);
 		}
-
-		String claert_red = "#990505";
-		currentPaint.setColor(Color.parseColor(claert_red));
-		notCurrentPaint.setColor(Color.argb(140, 255, 255, 255));
-
-		currentPaint.setTextSize(30);
-		currentPaint.setTypeface(Typeface.SERIF);
-
-		notCurrentPaint.setTextSize(notCurrentTextSize);
-		notCurrentPaint.setTypeface(Typeface.DEFAULT);
-
-		try {
-			setText("");
-			canvas.drawText(lrcList.get(index).getLrc(), width / 2, height / 2, currentPaint);
-
-			float tempY = height / 2;
-			// 画出本句之前的句子
-			for (int i = index - 1; i >= 0; i--) {
-				// 向上推移
-				tempY = tempY - textHeight;
-				canvas.drawText(lrcList.get(i).getLrc(), width / 2, tempY,	notCurrentPaint);
-			}
-			tempY = height / 2;
-			// 画出本句之后的句子
-			for (int i = index + 1; i < lrcList.size(); i++) {
-				// 往下推移
-				tempY = tempY + textHeight;
-				canvas.drawText(lrcList.get(i).getLrc(), width / 2, tempY,
-						notCurrentPaint);
-			}
-		} catch (Exception e) {
-			setText("...木有歌词文件，赶紧去下载...");
+		switch (event.getAction()) {
+		case MotionEvent.ACTION_DOWN:
+			touchX = event.getX();
+			break;
+		case MotionEvent.ACTION_MOVE:
+			touchY = tt - touchY;
+			offsetY = offsetY + touchY;
+			break;
+		case MotionEvent.ACTION_UP:
+			blScrollView = false;
+			break;
 		}
+		touchY = tt;
+		return true;
+	}
+
+	public void init() {
+		lrc_map = new TreeMap<Integer, Lyric>(); // TreeMap中元素的排列是有序的（HashMap中元素的排列顺序是不固定的）
+		offsetY = 320;
+
+		paint = new Paint();
+		paint.setTextAlign(Paint.Align.CENTER);
+		paint.setColor(Color.GREEN);
+		paint.setAntiAlias(true); // 防止锯齿
+		paint.setDither(true); // 防抖动
+		paint.setAlpha(180); // 设置透明度（0-255），值越小越透明
+
+		paintHL = new Paint();
+		paintHL.setTextAlign(Paint.Align.CENTER);
+
+		paintHL.setColor(Color.RED);
+		paintHL.setAntiAlias(true);
+		paintHL.setAlpha(255);
 	}
 
 	/**
-	 * 当view大小改变的时候调用的方法
+	 * 
+	 * @Title: SetTextSize
+	 * @Description: 根据歌词里面最长的那句来确定歌词字体的大小
+	 * @param 
+	 * @return void 
+	 * @throws
 	 */
-	@Override
-	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
-		super.onSizeChanged(w, h, oldw, oldh);
-		this.width = w;
-		this.height = h;
+	public void setTextSize() {
+		if (!blLrc) {
+			return;
+		}
+		int max = lrc_map.get(0).getLrc().length();
+		for (int i = 1; i < lrc_map.size(); i++) {
+			Lyric lrcStrLength = lrc_map.get(i);
+			if (max < lrcStrLength.getLrc().length()) {
+				max = lrcStrLength.getLrc().length();
+			}
+		}
+		SIZEWORD = 25;
+		Log.i("LyricView", "SIZEWORD = " + SIZEWORD);
 	}
 
-	public void setIndex(int index) {
-		this.index = index;
+	protected void onSizeChanged(int w, int h, int oldw, int oldh) {
+		mX = w * 0.5f;
+		super.onSizeChanged(w, h, oldw, oldh);
+	}
+
+	public Float setScollSpeed() {
+		float speed = 0;
+		if (offsetY + (SIZEWORD + INTERVAL) * lrcIndex > 220) {
+			speed = ((offsetY + (SIZEWORD + INTERVAL) * lrcIndex - 220) / 20);
+		} else if (offsetY + (SIZEWORD + INTERVAL) * lrcIndex < 120) {
+			speed = 0;
+		}
+
+		return speed;
+	}
+
+	public void setCurrentIndex(int time) {
+		if (blLrc) {
+			int index = 0;
+			for (int i = 0; i < lrc_map.size(); i++) {
+				Lyric temp = lrc_map.get(i);
+				if (temp.getBegintime() < time) {
+					++index;
+				}
+			}
+			lrcIndex = index - 1;
+			if (lrcIndex < 0) {
+				lrcIndex = 0;
+			}
+		}
+	}
+
+	public static void readLRC(String file) {
+		TreeMap<Integer, Lyric> lrc_read = new TreeMap<Integer, Lyric>();
+		String data = "";
+		try {
+			File saveFile = new File(file);
+			if (!saveFile.isFile()) {
+				blLrc = false;
+				return;
+			}
+			blLrc = true;
+
+			FileInputStream stream = new FileInputStream(saveFile); // context.openFileInput(file);
+
+			BufferedReader br = new BufferedReader(new InputStreamReader(stream, "GB2312"));
+			int i = 0;
+			Pattern pattern = Pattern.compile("\\d{2}");
+			while ((data = br.readLine()) != null) {
+				data = data.replace("[", "");// 将前面的替换成后面的
+				data = data.replace("]", "@");
+				String splitdata[] = data.split("@");// 分隔
+				if (data.endsWith("@")) {
+					for (int k = 0; k < splitdata.length; k++) {
+						String str = splitdata[k];
+
+						str = str.replace(":", ".");
+						str = str.replace(".", "@");
+						String timedata[] = str.split("@");
+						Matcher matcher = pattern.matcher(timedata[0]);
+						if (timedata.length == 3 && matcher.matches()) {
+							int m = Integer.parseInt(timedata[0]); // 分
+							int s = Integer.parseInt(timedata[1]); // 秒
+							int ms = Integer.parseInt(timedata[2]); // 毫秒
+							int currTime = (m * 60 + s) * 1000 + ms * 10;
+							Lyric item1 = new Lyric();
+							item1.setBegintime(currTime);
+							item1.setLrc("");
+							lrc_read.put(currTime, item1);
+						}
+					}
+				} else {
+					String lrcContenet = splitdata[splitdata.length - 1];
+
+					for (int j = 0; j < splitdata.length - 1; j++) {
+						String tmpstr = splitdata[j];
+
+						tmpstr = tmpstr.replace(":", ".");
+						tmpstr = tmpstr.replace(".", "@");
+						String timedata[] = tmpstr.split("@");
+						Matcher matcher = pattern.matcher(timedata[0]);
+						if (timedata.length == 3 && matcher.matches()) {
+							int m = Integer.parseInt(timedata[0]); // 分
+							int s = Integer.parseInt(timedata[1]); // 秒
+							int ms = Integer.parseInt(timedata[2]); // 毫秒
+							int currTime = (m * 60 + s) * 1000 + ms * 10;
+							Lyric item1 = new Lyric();
+							item1.setBegintime(currTime);
+							item1.setLrc(lrcContenet);
+							lrc_read.put(currTime, item1);// 将currTime当标签
+															// item1当数据
+															// 插入TreeMap里
+							i++;
+						}
+					}
+				}
+			}
+			stream.close();
+		} catch (FileNotFoundException e) {
+		} catch (IOException e) {
+		}
+
+		/*
+		 * 遍历hashmap 计算每句歌词所需要的时间
+		 */
+		lrc_map.clear();
+		data = "";
+		Iterator<Integer> iterator = lrc_read.keySet().iterator();
+		Lyric oldval = null;
+		int i = 0;
+		while (iterator.hasNext()) {
+			Object ob = iterator.next();
+
+			Lyric val = (Lyric) lrc_read.get(ob);
+
+			if (oldval == null)
+				oldval = val;
+			else {
+				Lyric item1 = new Lyric();
+				item1 = oldval;
+				item1.setTimeline(val.getBegintime() - oldval.getBegintime());
+				lrc_map.put(new Integer(i), item1);
+				i++;
+				oldval = val;
+			}
+			if (!iterator.hasNext()) {
+				lrc_map.put(new Integer(i), val);
+			}
+
+		}
+
+	}
+
+	public static boolean isBlLrc() {
+		return blLrc;
+	}
+
+	public float getOffsetY() {
+		return offsetY;
+	}
+
+	public void setOffsetY(float offsetY) {
+		this.offsetY = offsetY;
+	}
+
+	public int getSIZEWORD() {
+		return SIZEWORD;
+	}
+
+	public void setSIZEWORD(int sIZEWORD) {
+		SIZEWORD = sIZEWORD;
 	}
 }

@@ -9,7 +9,6 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -82,12 +81,10 @@ public class Mp3Service extends Service{
     
     private FileUtils imgUtils;
     
-    private LrcProcess lrcProcess; //歌词处理  
     private List<Lyric> lrcList = new ArrayList<Lyric>(); //存放歌词列表对象  
     private int index = 0;          //歌词检索值
 	String lyricBasePath = "/sdcard/cocoplayer/lyrics/";
 	
-	private BroadcastReceiver receiver;
 	private Binder mp3SerBinder = new Mp3SerBinder();
 	
 	@Override
@@ -104,6 +101,7 @@ public class Mp3Service extends Service{
 		
 		initMediaPlayer();
 		setNotification();
+		new Thread(new runable()).start();
 		super.onCreate();
 	}
 	
@@ -558,8 +556,7 @@ public class Mp3Service extends Service{
 	        		imgName.append(mp3List.get(currentMp3Position).getAlbum());
 	        	}
 	        }
-
-			initLrc();
+	        setLrc();
 		} else {
 			mediaPlayer.seekTo(mCurrentDuration);
 			mediaPlayer.start();
@@ -641,18 +638,12 @@ public class Mp3Service extends Service{
 		handler.sendEmptyMessage(HANDLER_REFRESH_NOTIFICATION);
 	}
 	
-	public void initLrc(){  
-		if (currentMp3Position >= 0) {
-	        lrcProcess = new LrcProcess();
-	        
-	        String realLyricPath = getCurrentMp3LyricPath();
-	        lrcProcess.readLRC(realLyricPath);  
-	        lrcList = lrcProcess.getLrcList();
-	        
-	        MainActivity.detail_lyric_view.setmLrcList(lrcList);  
-	        handler.post(lrcRunnable);  
-		}
-    }  
+	public void setLrc() {
+		String lrc = getCurrentMp3LyricPath();
+		MainActivity.detail_lyric_view.readLRC(lrc);
+		MainActivity.detail_lyric_view.setTextSize();
+		MainActivity.detail_lyric_view.setOffsetY(350);
+	}	
 	
 	private String getCurrentMp3LyricPath() {
 		StringBuilder lyricPath = new StringBuilder();
@@ -662,44 +653,31 @@ public class Mp3Service extends Service{
         return lyricPath.toString();
 	}
 	
-    Runnable lrcRunnable = new Runnable() {  
-        @Override  
-        public void run() {
-        	MainActivity.detail_lyric_view.setIndex(lrcIndex());  
-            MainActivity.detail_lyric_view.invalidate();  
-            handler.postDelayed(lrcRunnable, 100);  
-        } 
-    }; 
+	class runable implements Runnable {
+		public void run() {
+			while (true) {
+				try {
+					Thread.sleep(100);
+					if (mediaPlayer.isPlaying()) {
+						MainActivity.detail_lyric_view.setOffsetY(MainActivity.detail_lyric_view.getOffsetY() - MainActivity.detail_lyric_view.setScollSpeed());
+						MainActivity.detail_lyric_view.setCurrentIndex(mediaPlayer.getCurrentPosition());
+						mHandler.post(mUpdateResults);
+					}
+				} catch (InterruptedException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+
+	Handler mHandler = new Handler();
+	Runnable mUpdateResults = new Runnable() {
+		public void run() {
+			MainActivity.detail_lyric_view.invalidate(); // 更新视图
+		}
+	};
 	
-    /** 
-     * 根据时间获取歌词显示的索引值 
-     * @return 
-     */  
-    public int lrcIndex() {  
-    	int currentPosition = 0;
-    	if (mediaPlayer != null) {
-    		currentPosition = mediaPlayer.getCurrentPosition();
-    	}
-        if(currentPosition < maxDuration) {  
-            for (int i = 0; i < lrcList.size(); i++) {  
-                if (i < lrcList.size() - 1) {  
-                    if (currentPosition < lrcList.get(i).getTimeInMsec() && i == 0) {  
-                        index = i;  
-                    }  
-                    if (currentPosition > lrcList.get(i).getTimeInMsec()  
-                            && currentPosition < lrcList.get(i + 1).getTimeInMsec()) {  
-                        index = i;  
-                    }  
-                }  
-                if (i == lrcList.size() - 1  
-                        && currentPosition > lrcList.get(i).getTimeInMsec()) {  
-                    index = i;  
-                }  
-            }  
-        }  
-        return index;  
-    }  
-    
 	@Override
 	public void onDestroy() {
 		Log.i(TAG, "onDestory");
