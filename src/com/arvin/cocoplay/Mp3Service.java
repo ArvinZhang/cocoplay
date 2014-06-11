@@ -16,6 +16,7 @@ import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnPreparedListener;
+import android.media.audiofx.Visualizer;
 import android.os.Binder;
 import android.os.Build.VERSION;
 import android.os.Environment;
@@ -23,6 +24,9 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.util.Log;
+import android.view.View;
+import android.view.ViewGroup.LayoutParams;
+import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
@@ -101,6 +105,9 @@ public class Mp3Service extends Service{
 		
 		initMediaPlayer();
 		setNotification();
+		setVisua();
+
+        visualizer.setEnabled(true);
 		new Thread(new runable()).start();
 		super.onCreate();
 	}
@@ -492,6 +499,7 @@ public class Mp3Service extends Service{
 			}
 		}
 	};
+	private Visualizer visualizer;
 	
 	private void updateCurrentMp3() {
 		if (mediaPlayer != null) {
@@ -636,6 +644,50 @@ public class Mp3Service extends Service{
 		intent.setAction(INTENT_ACTION_PAUSE);
 		sendBroadcast(intent);
 		handler.sendEmptyMessage(HANDLER_REFRESH_NOTIFICATION);
+	}
+	
+	private void setVisua() {
+		visualizer = new Visualizer(mediaPlayer.getAudioSessionId());  
+        visualizer.setCaptureSize(1024);  
+        visualizer.setDataCaptureListener(  
+        		new Visualizer.OnDataCaptureListener() {  
+        			  
+        	        @Override  
+        	        public void onWaveFormDataCapture(Visualizer visualizer,  
+        	            byte[] waveform, int samplingRate) {  
+        	  
+        	            // 这里添加获得数据的处理 byte[] 数组 更新出去，并画图。这里可以把这个  
+        	            // 数组传到RunOnMusic里去  
+        	            // visualView.updateVisualizer(waveform);  
+        	  
+        	        }  
+        	  
+        	        @Override  
+        	        public void onFftDataCapture(Visualizer visualizer,  
+        	            byte[] fft, int samplingRate) {  
+        	            byte[] model = new byte[fft.length / 2 + 1];  
+        	            model[0] = (byte) Math.abs(fft[1]);  
+        	            int j = 1;  
+        	  
+        	            for (int i = 2; i < 18;) {  
+        	                model[j] = (byte) Math.hypot(fft[i], fft[i + 1]);  
+        	                i += 2;  
+        	                j++;  
+        	            }  
+        	  
+        	            MainActivity.waveformView.updateVisualizer(model);  
+        	  
+        	        }  
+        	    }, Visualizer.getMaxCaptureRate() / 2, false, true);
+		
+		MainActivity.waveformView.setVisibility(View.VISIBLE);
+		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT); 
+		lp.width = LayoutParams.MATCH_PARENT;
+		lp.height = LayoutParams.MATCH_PARENT;
+		lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); 
+		lp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE); 
+		MainActivity.waveformView.setLayoutParams(lp);
+		MainActivity.playAndDetail_layout.addView(MainActivity.waveformView);
 	}
 	
 	public void setLrc() {
