@@ -42,6 +42,7 @@ import com.arvin.custom.RefreshableView;
 import com.arvin.custom.RefreshableView.PullToRefreshListener;
 import com.arvin.custom.SideBar;
 import com.arvin.custom.SideBar.OnTouchingLetterChangedListener;
+import com.arvin.custom.VisualizerView;
 import com.arvin.pojo.Mp3;
 import com.arvin.tools.Blur;
 import com.arvin.tools.FileUtils;
@@ -107,6 +108,8 @@ public class MainActivity extends Activity{
     private TextView detail_time_total;
     private TextView detail_title_text;
     public static LyricView detail_lyric_view;
+    public static VisualizerView waveformView;
+    public static RelativeLayout playAndDetail_layout;
 	
 	private Mp3SerBinder mp3SerBinder;
 	private ServiceConnection mp3SerConn = new ServiceConnection() {
@@ -197,7 +200,9 @@ public class MainActivity extends Activity{
 		play_songInfo_layout = (RelativeLayout) findViewById(R.id.play_songInfo_layout);
 		contentView_layout = (RelativeLayout) findViewById(R.id.contentView_layout);
 		
+		playAndDetail_layout = (RelativeLayout) findViewById(R.id.playAndDetail_layout);
 		detail_lyric_view = (LyricView) findViewById(R.id.detail_lyric_view);
+		waveformView = new VisualizerView(MainActivity.this);
 		
 	    detail_back_img = (ImageView) findViewById(R.id.detail_back_img);
 	    detail_back_img.setOnClickListener(new OnClickListener() {

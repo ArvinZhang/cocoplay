@@ -12,6 +12,7 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
@@ -23,13 +24,14 @@ import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.support.v4.view.ViewPager.LayoutParams;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup.LayoutParams;
+import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
+import com.arvin.custom.VisualizerView;
 import com.arvin.pojo.Lyric;
 import com.arvin.pojo.Mp3;
 import com.arvin.tools.FileUtils;
@@ -80,6 +82,8 @@ public class Mp3Service extends Service{
     private NotificationManager notificationManager;
     private RemoteViews midContentView;
     private RemoteViews contentView;
+    private static final float VISUALIZER_HEIGHT_DIP = 300F; 
+	private Visualizer visualizer;
     
     private int sysVersion = Integer.parseInt(VERSION.SDK);  
     
@@ -105,7 +109,9 @@ public class Mp3Service extends Service{
 		
 		initMediaPlayer();
 		setNotification();
-		setVisua();
+		//setVisua();
+		
+		setupVisualizerFxAndUI();
 
         visualizer.setEnabled(true);
 		new Thread(new runable()).start();
@@ -499,7 +505,6 @@ public class Mp3Service extends Service{
 			}
 		}
 	};
-	private Visualizer visualizer;
 	
 	private void updateCurrentMp3() {
 		if (mediaPlayer != null) {
@@ -646,49 +651,82 @@ public class Mp3Service extends Service{
 		handler.sendEmptyMessage(HANDLER_REFRESH_NOTIFICATION);
 	}
 	
-	private void setVisua() {
-		visualizer = new Visualizer(mediaPlayer.getAudioSessionId());  
-        visualizer.setCaptureSize(1024);  
-        visualizer.setDataCaptureListener(  
-        		new Visualizer.OnDataCaptureListener() {  
-        			  
-        	        @Override  
-        	        public void onWaveFormDataCapture(Visualizer visualizer,  
-        	            byte[] waveform, int samplingRate) {  
-        	  
-        	            // 这里添加获得数据的处理 byte[] 数组 更新出去，并画图。这里可以把这个  
-        	            // 数组传到RunOnMusic里去  
-        	            // visualView.updateVisualizer(waveform);  
-        	  
-        	        }  
-        	  
-        	        @Override  
-        	        public void onFftDataCapture(Visualizer visualizer,  
-        	            byte[] fft, int samplingRate) {  
-        	            byte[] model = new byte[fft.length / 2 + 1];  
-        	            model[0] = (byte) Math.abs(fft[1]);  
-        	            int j = 1;  
-        	  
-        	            for (int i = 2; i < 18;) {  
-        	                model[j] = (byte) Math.hypot(fft[i], fft[i + 1]);  
-        	                i += 2;  
-        	                j++;  
-        	            }  
-        	  
-        	            MainActivity.waveformView.updateVisualizer(model);  
-        	  
-        	        }  
-        	    }, Visualizer.getMaxCaptureRate() / 2, false, true);
+//	private void setVisua() {
+//		visualizer = new Visualizer(mediaPlayer.getAudioSessionId());  
+//        visualizer.setCaptureSize(256);  
+//        visualizer.setDataCaptureListener(  
+//        		new Visualizer.OnDataCaptureListener() {  
+//        			  
+//        	        @Override  
+//        	        public void onWaveFormDataCapture(Visualizer visualizer,  
+//        	            byte[] waveform, int samplingRate) {  
+//        	  
+//        	            // 这里添加获得数据的处理 byte[] 数组 更新出去，并画图。这里可以把这个  
+//        	            // 数组传到RunOnMusic里去  
+//        	            // visualView.updateVisualizer(waveform);  
+//        	  
+//        	        }  
+//        	  
+//        	        @Override  
+//        	        public void onFftDataCapture(Visualizer visualizer,  
+//        	            byte[] fft, int samplingRate) {  
+//        	            byte[] model = new byte[fft.length / 2 + 1];  
+//        	            model[0] = (byte) Math.abs(fft[1]);  
+//        	            int j = 1;  
+//        	  
+//        	            for (int i = 2; i < 18;) {  
+//        	                model[j] = (byte) Math.hypot(fft[i], fft[i + 1]);  
+//        	                i += 2;  
+//        	                j++;  
+//        	            }  
+//        	  
+//        	            MainActivity.waveformView.updateVisualizer(model);  
+//        	  
+//        	        }  
+//        	    }, Visualizer.getMaxCaptureRate() / 2, false, true);
+//		
+//		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT); 
+////		lp.width = LayoutParams.MATCH_PARENT;
+////		lp.height = LayoutParams.MATCH_PARENT;
+////		lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); 
+////		lp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE); 
+//		MainActivity.waveformView.setLayoutParams(lp);
+//		MainActivity.playAndDetail_layout.addView(MainActivity.waveformView);
+//	}
+	
+	private void setupVisualizerFxAndUI()  
+    {  
+		MainActivity.waveformView = new VisualizerView(this);  
 		
-		MainActivity.waveformView.setVisibility(View.VISIBLE);
-		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT); 
-		lp.width = LayoutParams.MATCH_PARENT;
-		lp.height = LayoutParams.MATCH_PARENT;
-		lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); 
-		lp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE); 
+		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(  
+                ViewGroup.LayoutParams.MATCH_PARENT,  
+                600)); 
+		//lp.setMargins(0, 100, 0, 0);
+		lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE); 
 		MainActivity.waveformView.setLayoutParams(lp);
-		MainActivity.playAndDetail_layout.addView(MainActivity.waveformView);
-	}
+		MainActivity.waveformView.setBackgroundColor(Color.parseColor("#44000000"));
+		MainActivity.playAndDetail_layout.addView(MainActivity.waveformView);  
+  
+        final int maxCR = Visualizer.getMaxCaptureRate();  
+          
+        visualizer = new Visualizer(mediaPlayer.getAudioSessionId());  
+        visualizer.setCaptureSize(256);  
+        visualizer.setDataCaptureListener(  
+                new Visualizer.OnDataCaptureListener()  
+                {  
+                    public void onWaveFormDataCapture(Visualizer visualizer,  
+                            byte[] bytes, int samplingRate)  
+                    {  
+                    	MainActivity.waveformView.updateVisualizer(bytes);  
+                    }  
+  
+                    public void onFftDataCapture(Visualizer visualizer,  
+                            byte[] fft, int samplingRate)  
+                    {  
+                    	MainActivity.waveformView.updateVisualizer(fft);  
+                    }  
+                }, maxCR / 2, false, true);  
+    }  
 	
 	public void setLrc() {
 		String lrc = getCurrentMp3LyricPath();

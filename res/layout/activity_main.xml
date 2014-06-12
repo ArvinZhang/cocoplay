@@ -306,7 +306,8 @@
     			android:layout_height="wrap_content" 
     			android:layout_above="@+id/detail_play_bar_layout"  
     			android:layout_below="@+id/detail_title_text"  
-    			android:layout_centerHorizontal="true" />
+    			android:layout_centerHorizontal="true"
+    			android:visibility="gone"/>
 
 		    <RelativeLayout
 		        android:id="@+id/detail_play_bar_layout"
