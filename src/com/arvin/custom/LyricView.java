@@ -69,17 +69,17 @@ public class LyricView extends View {
 			paintHL.setTextSize(SIZEWORD);
 			paint.setTextSize(SIZEWORD);
 			Lyric temp = lrc_map.get(lrcIndex);
-//			canvas.drawText(temp.getLrc(), mX, offsetY + (SIZEWORD + INTERVAL)
-//					* lrcIndex, paintHL);
+			canvas.drawText(temp.getLrc(), mX, offsetY + (SIZEWORD + INTERVAL)
+					* lrcIndex, paintHL);
 			
-			int screenWidth = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
-			int textZoneWidth = screenWidth - 20;
-			
-			StaticLayout layout = new StaticLayout(temp.getLrc(), paintHL,  
-		            textZoneWidth,  
-		            Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);  
-		    canvas.translate(10 + Math.abs(textZoneWidth-temp.getLrc().length()*SIZEWORD)/2, 0);
-		    layout.draw(canvas);
+//			int screenWidth = ((WindowManager) context.getSystemService(Context.WINDOW_SERVICE)).getDefaultDisplay().getWidth();
+//			int textZoneWidth = screenWidth - 20;
+//			
+//			StaticLayout layout = new StaticLayout(temp.getLrc(), paintHL,  
+//		            textZoneWidth,  
+//		            Alignment.ALIGN_NORMAL, 1.0F, 0.0F, true);  
+//		    canvas.translate(10 + Math.abs(textZoneWidth-temp.getLrc().length()*SIZEWORD)/2, 0);
+//		    layout.draw(canvas);
 			
 			// 画当前歌词之前的歌词
 			for (int i = lrcIndex - 1; i >= 0; i--) {

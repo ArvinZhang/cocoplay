@@ -112,22 +112,11 @@ public class SideBar extends View {
 		return true;
 	}
 
-	/**
-	 * 向外公开的方法
-	 * 
-	 * @param onTouchingLetterChangedListener
-	 */
 	public void setOnTouchingLetterChangedListener(
 			OnTouchingLetterChangedListener onTouchingLetterChangedListener) {
 		this.onTouchingLetterChangedListener = onTouchingLetterChangedListener;
 	}
 
-	/**
-	 * 接口
-	 * 
-	 * @author coder
-	 * 
-	 */
 	public interface OnTouchingLetterChangedListener {
 		public void onTouchingLetterChanged(String s);
 	}

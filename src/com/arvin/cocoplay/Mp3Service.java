@@ -26,6 +26,7 @@ import android.os.IBinder;
 import android.os.Message;
 import android.support.v4.view.ViewPager.LayoutParams;
 import android.util.Log;
+import android.view.View;
 import android.view.ViewGroup;
 import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
@@ -109,11 +110,10 @@ public class Mp3Service extends Service{
 		
 		initMediaPlayer();
 		setNotification();
-		//setVisua();
-		
 		setupVisualizerFxAndUI();
-
         visualizer.setEnabled(true);
+        MainActivity.waveformView.setVisibility(View.GONE);
+        
 		new Thread(new runable()).start();
 		super.onCreate();
 	}
@@ -651,56 +651,12 @@ public class Mp3Service extends Service{
 		handler.sendEmptyMessage(HANDLER_REFRESH_NOTIFICATION);
 	}
 	
-//	private void setVisua() {
-//		visualizer = new Visualizer(mediaPlayer.getAudioSessionId());  
-//        visualizer.setCaptureSize(256);  
-//        visualizer.setDataCaptureListener(  
-//        		new Visualizer.OnDataCaptureListener() {  
-//        			  
-//        	        @Override  
-//        	        public void onWaveFormDataCapture(Visualizer visualizer,  
-//        	            byte[] waveform, int samplingRate) {  
-//        	  
-//        	            // 这里添加获得数据的处理 byte[] 数组 更新出去，并画图。这里可以把这个  
-//        	            // 数组传到RunOnMusic里去  
-//        	            // visualView.updateVisualizer(waveform);  
-//        	  
-//        	        }  
-//        	  
-//        	        @Override  
-//        	        public void onFftDataCapture(Visualizer visualizer,  
-//        	            byte[] fft, int samplingRate) {  
-//        	            byte[] model = new byte[fft.length / 2 + 1];  
-//        	            model[0] = (byte) Math.abs(fft[1]);  
-//        	            int j = 1;  
-//        	  
-//        	            for (int i = 2; i < 18;) {  
-//        	                model[j] = (byte) Math.hypot(fft[i], fft[i + 1]);  
-//        	                i += 2;  
-//        	                j++;  
-//        	            }  
-//        	  
-//        	            MainActivity.waveformView.updateVisualizer(model);  
-//        	  
-//        	        }  
-//        	    }, Visualizer.getMaxCaptureRate() / 2, false, true);
-//		
-//		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(LayoutParams.MATCH_PARENT,LayoutParams.MATCH_PARENT); 
-////		lp.width = LayoutParams.MATCH_PARENT;
-////		lp.height = LayoutParams.MATCH_PARENT;
-////		lp.addRule(RelativeLayout.ALIGN_PARENT_RIGHT, RelativeLayout.TRUE); 
-////		lp.addRule(RelativeLayout.ALIGN_PARENT_TOP, RelativeLayout.TRUE); 
-//		MainActivity.waveformView.setLayoutParams(lp);
-//		MainActivity.playAndDetail_layout.addView(MainActivity.waveformView);
-//	}
-	
-	private void setupVisualizerFxAndUI()  
-    {  
+	private void setupVisualizerFxAndUI() {  
 		MainActivity.waveformView = new VisualizerView(this);  
 		
 		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(  
                 ViewGroup.LayoutParams.MATCH_PARENT,  
-                600)); 
+                400)); 
 		//lp.setMargins(0, 100, 0, 0);
 		lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE); 
 		MainActivity.waveformView.setLayoutParams(lp);

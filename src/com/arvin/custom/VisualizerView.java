@@ -26,7 +26,7 @@ public class VisualizerView extends View {
 
 		mForePaint.setStrokeWidth(8f);
 		mForePaint.setAntiAlias(true);
-		mForePaint.setColor(Color.rgb(0, 128, 255));
+		mForePaint.setColor(Color.rgb(255, 255, 255));
 	}
 
 	public void updateVisualizer(byte[] fft) {
@@ -59,16 +59,6 @@ public class VisualizerView extends View {
 		}
 
 		mRect.set(0, 0, getWidth(), getHeight());
-
-		// 绘制波形
-		// for (int i = 0; i < mBytes.length - 1; i++) {
-		// mPoints[i * 4] = mRect.width() * i / (mBytes.length - 1);
-		// mPoints[i * 4 + 1] = mRect.height() / 2
-		// + ((byte) (mBytes[i] + 128)) * (mRect.height() / 2) / 128;
-		// mPoints[i * 4 + 2] = mRect.width() * (i + 1) / (mBytes.length - 1);
-		// mPoints[i * 4 + 3] = mRect.height() / 2
-		// + ((byte) (mBytes[i + 1] + 128)) * (mRect.height() / 2) / 128;
-		// }
 
 		// 绘制频谱
 		final int baseX = mRect.width() / mSpectrumNum;

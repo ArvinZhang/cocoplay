@@ -110,6 +110,7 @@ public class MainActivity extends Activity{
     public static LyricView detail_lyric_view;
     public static VisualizerView waveformView;
     public static RelativeLayout playAndDetail_layout;
+    private ImageView detail_switch_lrc_visualizer;
 	
 	private Mp3SerBinder mp3SerBinder;
 	private ServiceConnection mp3SerConn = new ServiceConnection() {
@@ -203,6 +204,19 @@ public class MainActivity extends Activity{
 		playAndDetail_layout = (RelativeLayout) findViewById(R.id.playAndDetail_layout);
 		detail_lyric_view = (LyricView) findViewById(R.id.detail_lyric_view);
 		waveformView = new VisualizerView(MainActivity.this);
+		detail_switch_lrc_visualizer = (ImageView) findViewById(R.id.detail_switch_lrc_visualizer);
+		detail_switch_lrc_visualizer.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View arg0) {
+				if (detail_lyric_view.getVisibility() != View.VISIBLE) {
+					detail_lyric_view.setVisibility(View.VISIBLE);
+					waveformView.setVisibility(View.GONE);
+				} else {
+					detail_lyric_view.setVisibility(View.GONE);
+					waveformView.setVisibility(View.VISIBLE);
+				}
+			}
+		});
 		
 	    detail_back_img = (ImageView) findViewById(R.id.detail_back_img);
 	    detail_back_img.setOnClickListener(new OnClickListener() {
