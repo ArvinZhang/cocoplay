@@ -1,8 +1,6 @@
 package com.arvin.cocoplay;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Notification;
@@ -12,28 +10,19 @@ import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.media.MediaPlayer.OnCompletionListener;
 import android.media.MediaPlayer.OnPreparedListener;
-import android.media.audiofx.Visualizer;
 import android.os.Binder;
 import android.os.Build.VERSION;
-import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
-import android.support.v4.view.ViewPager.LayoutParams;
 import android.util.Log;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.RelativeLayout;
 import android.widget.RemoteViews;
 import android.widget.Toast;
 
-import com.arvin.custom.VisualizerView;
-import com.arvin.pojo.Lyric;
 import com.arvin.pojo.Mp3;
 import com.arvin.tools.FileUtils;
 import com.arvin.tools.Tools;
@@ -83,21 +72,18 @@ public class Mp3Service extends Service{
     private NotificationManager notificationManager;
     private RemoteViews midContentView;
     private RemoteViews contentView;
-    private static final float VISUALIZER_HEIGHT_DIP = 300F; 
-	private Visualizer visualizer;
     
     private int sysVersion = Integer.parseInt(VERSION.SDK);  
     
     private FileUtils imgUtils;
     
-    private List<Lyric> lrcList = new ArrayList<Lyric>(); //存放歌词列表对象  
-    private int index = 0;          //歌词检索值
-	String lyricBasePath = "/sdcard/cocoplayer/lyrics/";
-	
-	private Binder mp3SerBinder = new Mp3SerBinder();
+	private Binder mp3SerBinder;
 	
 	@Override
 	public IBinder onBind(Intent arg0) {
+		mp3SerBinder = new Mp3SerBinder();
+
+		Log.i(TAG, "mp3SerBinder " + mp3SerBinder.toString());
 		return mp3SerBinder;
 	}
 
@@ -106,26 +92,11 @@ public class Mp3Service extends Service{
 		Log.i(TAG, "onCreate");
 		mp3List = Mp3Loader.getInstance(getContentResolver()).getMp3List();
 		imgUtils = FileUtils.getInstance(Mp3Service.this);
-		ensureOrCreateLyricFolder();
 		
 		initMediaPlayer();
 		setNotification();
-		setupVisualizerFxAndUI();
-        visualizer.setEnabled(true);
-        MainActivity.waveformView.setVisibility(View.GONE);
-        
-		new Thread(new runable()).start();
+		
 		super.onCreate();
-	}
-	
-	private void ensureOrCreateLyricFolder() {
-		//判断SDCard是否存在，并且可以读写
-		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
-		    File lyricFolder = new File(lyricBasePath);
-		    if (!lyricFolder.exists()) {
-		    	lyricFolder.mkdirs();
-		    }
-		}   
 	}
 	
 	private void initMediaPlayer() {
@@ -389,6 +360,10 @@ public class Mp3Service extends Service{
 	 */
 	public class Mp3SerBinder extends Binder {
 		
+		public Mp3SerBinder() {
+			Log.i(TAG, "binderService");
+		}
+		
 		public void bindPlay(int currentMp3, int mCurrentDuration) {
 			Log.i(TAG, "bindPlay() - currentMp3=" + currentMp3);
 			
@@ -470,6 +445,10 @@ public class Mp3Service extends Service{
 
 		public void bindRefreshMp3List() {
 			mp3List = Mp3Loader.getInstance(getContentResolver()).getMp3List();
+		}
+		
+		public int bindGetAudioSessionId() {
+			return mediaPlayer != null ? mediaPlayer.getAudioSessionId() : 0;
 		}
 	}
 
@@ -569,7 +548,6 @@ public class Mp3Service extends Service{
 	        		imgName.append(mp3List.get(currentMp3Position).getAlbum());
 	        	}
 	        }
-	        setLrc();
 		} else {
 			mediaPlayer.seekTo(mCurrentDuration);
 			mediaPlayer.start();
@@ -651,71 +629,6 @@ public class Mp3Service extends Service{
 		handler.sendEmptyMessage(HANDLER_REFRESH_NOTIFICATION);
 	}
 	
-	private void setupVisualizerFxAndUI() {  
-		MainActivity.waveformView = new VisualizerView(this);  
-		
-		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(  
-                ViewGroup.LayoutParams.MATCH_PARENT,  
-                400)); 
-		//lp.setMargins(0, 100, 0, 0);
-		lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE); 
-		MainActivity.waveformView.setLayoutParams(lp);
-		MainActivity.waveformView.setBackgroundColor(Color.parseColor("#44000000"));
-		MainActivity.playAndDetail_layout.addView(MainActivity.waveformView);  
-  
-        final int maxCR = Visualizer.getMaxCaptureRate();  
-          
-        visualizer = new Visualizer(mediaPlayer.getAudioSessionId());  
-        visualizer.setCaptureSize(256);  
-        visualizer.setDataCaptureListener(  
-                new Visualizer.OnDataCaptureListener()  
-                {  
-                    public void onWaveFormDataCapture(Visualizer visualizer,  
-                            byte[] bytes, int samplingRate)  
-                    {  
-                    	MainActivity.waveformView.updateVisualizer(bytes);  
-                    }  
-  
-                    public void onFftDataCapture(Visualizer visualizer,  
-                            byte[] fft, int samplingRate)  
-                    {  
-                    	MainActivity.waveformView.updateVisualizer(fft);  
-                    }  
-                }, maxCR / 2, false, true);  
-    }  
-	
-	public void setLrc() {
-		String lrc = getCurrentMp3LyricPath();
-		MainActivity.detail_lyric_view.readLRC(lrc);
-		MainActivity.detail_lyric_view.setTextSize();
-		MainActivity.detail_lyric_view.setOffsetY(350);
-	}	
-	
-	private String getCurrentMp3LyricPath() {
-		StringBuilder lyricPath = new StringBuilder();
-        lyricPath.append(lyricBasePath);
-        lyricPath.append(mp3List.get(currentMp3Position).getTitle());
-        lyricPath.append(".lrc");
-        return lyricPath.toString();
-	}
-	
-	class runable implements Runnable {
-		public void run() {
-			while (true) {
-				try {
-					Thread.sleep(100);
-					if (mediaPlayer.isPlaying()) {
-						MainActivity.detail_lyric_view.setOffsetY(MainActivity.detail_lyric_view.getOffsetY() - MainActivity.detail_lyric_view.setScollSpeed());
-						MainActivity.detail_lyric_view.setCurrentIndex(mediaPlayer.getCurrentPosition());
-						mHandler.post(mUpdateResults);
-					}
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			}
-		}
-	}
 
 	Handler mHandler = new Handler();
 	Runnable mUpdateResults = new Runnable() {

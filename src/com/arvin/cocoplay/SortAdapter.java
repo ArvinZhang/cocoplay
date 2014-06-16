@@ -47,7 +47,7 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 	}
 
 	public View getView(int position, View view, ViewGroup arg2) {
-		Log.i(TAG, "getView() position=" + position);
+//		Log.i(TAG, "getView() position=" + position);
 		
 		ViewHolder viewHolder = null;
 		final Mp3 mContent = list.get(position);

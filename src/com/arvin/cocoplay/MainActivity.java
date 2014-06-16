@@ -1,6 +1,8 @@
 package com.arvin.cocoplay;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -13,7 +15,9 @@ import android.content.ServiceConnection;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.media.audiofx.Visualizer;
 import android.os.Bundle;
+import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
@@ -26,6 +30,7 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.View.OnTouchListener;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
@@ -43,6 +48,7 @@ import com.arvin.custom.RefreshableView.PullToRefreshListener;
 import com.arvin.custom.SideBar;
 import com.arvin.custom.SideBar.OnTouchingLetterChangedListener;
 import com.arvin.custom.VisualizerView;
+import com.arvin.pojo.Lyric;
 import com.arvin.pojo.Mp3;
 import com.arvin.tools.Blur;
 import com.arvin.tools.FileUtils;
@@ -111,6 +117,10 @@ public class MainActivity extends Activity{
     public static VisualizerView waveformView;
     public static RelativeLayout playAndDetail_layout;
     private ImageView detail_switch_lrc_visualizer;
+	private Visualizer visualizer;
+	public static final String LYRICBASEPATH = Environment.getExternalStorageDirectory().getPath() + "/cocoplayer/lyrics/";
+	public static boolean isLrcInit = false;
+	
 	
 	private Mp3SerBinder mp3SerBinder;
 	private ServiceConnection mp3SerConn = new ServiceConnection() {
@@ -122,6 +132,7 @@ public class MainActivity extends Activity{
 		@Override
 		public void onServiceConnected(ComponentName name, IBinder service) {
 			mp3SerBinder = (Mp3SerBinder) service;
+			showToast("onServiceConnected");
 		}
 	};
 	
@@ -135,15 +146,30 @@ public class MainActivity extends Activity{
 		Log.i(TAG, "onCreate");
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.activity_main);
+		connectToMp3Ser();
+
+//		Log.i(TAG, "mp3SerBinder " + mp3SerBinder.toString());
 
 		mp3Loader = Mp3Loader.getInstance(getContentResolver());
 		imgUtils = FileUtils.getInstance(MainActivity.this);
 		tools = new Tools();
-		connectToMp3Ser();
-		
-		initViews();
-	}
 
+		ensureOrCreateLyricFolder();
+		initViews();
+
+	}
+	
+	private void ensureOrCreateLyricFolder() {
+		//判断SDCard是否存在，并且可以读写
+		if(Environment.getExternalStorageState().equals(Environment.MEDIA_MOUNTED)){
+		    File lyricFolder = new File(LYRICBASEPATH);
+		    
+		    Log.i(TAG, LYRICBASEPATH);
+		    if (!lyricFolder.exists()) {
+		    	lyricFolder.mkdirs();
+		    }
+		}   
+	}
 	
 	@Override
 	protected void onResume() {
@@ -152,7 +178,7 @@ public class MainActivity extends Activity{
 		setData(false);
 		if (mp3List.size() > 0) {
 			if (mp3SerBinder != null) {
-			currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
+				currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
 			}
 			
 			if (currentPlayingPosition >= 0) {
@@ -167,6 +193,7 @@ public class MainActivity extends Activity{
 		
 		main_seekBar.setMax(currentSeekMax);
 		main_seekBar.setProgress(playedPosition);
+
 		registerReceiver();
 		super.onResume();
 	}
@@ -212,6 +239,10 @@ public class MainActivity extends Activity{
 					detail_lyric_view.setVisibility(View.VISIBLE);
 					waveformView.setVisibility(View.GONE);
 				} else {
+					if (visualizer == null) {
+						setupVisualizerFxAndUI();
+					}
+					visualizer.setEnabled(true);
 					detail_lyric_view.setVisibility(View.GONE);
 					waveformView.setVisibility(View.VISIBLE);
 				}
@@ -241,18 +272,17 @@ public class MainActivity extends Activity{
 	    detail_title_text = (TextView) findViewById(R.id.detail_title_text);
 		
 		detail_singer_img = (ImageView) findViewById(R.id.detail_singer_img);
-		Bitmap sentBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.adele);
-		Bitmap singerMap = new Blur().fastblur(MainActivity.this, sentBitmap, 50);
-		detail_singer_img.setImageBitmap(singerMap);
+		Bitmap originSingerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.adele);
+		Bitmap singerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
+		detail_singer_img.setImageBitmap(singerBitmap);
 		
 		play_songInfo_layout.setOnClickListener(new OnClickListener() {
-			
 			@Override
 			public void onClick(View arg0) {
-				Toast.makeText(MainActivity.this, "click", 3000).show();
 				slidingLayout.expandPane();
 			}
 		});
+
 		final int screenHeight = MainActivity.this.getWindowManager().getDefaultDisplay().getHeight();
 		play_songInfo_layout.setOnTouchListener(new OnTouchListener() {
 			
@@ -408,9 +438,16 @@ public class MainActivity extends Activity{
 		refreshableView.setOnRefreshListener(new PullToRefreshListener() {
 			@Override
 			public void onRefresh() {
-				if (adapter != null) {
-					// doInBackground中不能更新UI，所以放到handler去执行
-					handler.sendEmptyMessage(MP3_REFRESH);
+				try {
+					Thread.sleep(2000);
+					if (adapter != null) {
+						// doInBackground中不能更新UI，所以放到handler去执行
+						handler.sendEmptyMessage(MP3_REFRESH);
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				} finally {
+					refreshableView.finishRefreshing();
 				}
 			}
 		}, 0);
@@ -581,7 +618,6 @@ public class MainActivity extends Activity{
 					mp3SerBinder.bindRefreshMp3List();
 					adapter.notifyDataSetChanged();
 
-					refreshableView.finishRefreshing();
 					break;
 				case PLAYING_POSITION_CHANGE:
 					initPlayingLayout(mp3List.get(currentPlayingPosition));
@@ -628,6 +664,12 @@ public class MainActivity extends Activity{
 				main_seekBar.setMax(currentSeekMax);
 				detail_seekBar.setMax(currentSeekMax);
 				detail_title_text.setText(mp3List.get(currentPlayingPosition).getTitle());
+
+				if (!isLrcInit) {
+					showToast("new lrcrunnable");
+					new Thread(new LrcRunnable()).start();
+				}
+				setLrc();
 				
 				handler.sendEmptyMessage(PLAYING_POSITION_CHANGE);
 			} else if (Mp3Service.INTENT_ACTION_PAUSE.equals(action) || Mp3Service.INTENT_ACTION_PLAY.equals(action)) {
@@ -639,14 +681,6 @@ public class MainActivity extends Activity{
 		}
 	}
 	
-	/**
-	 * 
-	 * @Title: updateModeImg
-	 * @Description: 通过传入的mode值设置对应的播放模式图标
-	 * @param @param mode
-	 * @return void 
-	 * @throws
-	 */
 	private void updateModeImg(int mode) {
 		StringBuilder msg = new StringBuilder();
 		switch (mode) {
@@ -686,7 +720,84 @@ public class MainActivity extends Activity{
 		intentFilter.addAction(Mp3Service.INTENT_ACTION_MODE);
 		registerReceiver(progressReceiver, intentFilter);
 	}
-    
+	
+	private void setupVisualizerFxAndUI() {  
+		MainActivity.waveformView = new VisualizerView(this);  
+		
+		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(  
+                ViewGroup.LayoutParams.MATCH_PARENT,  
+                400)); 
+		lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE); 
+		waveformView.setLayoutParams(lp);
+		waveformView.setBackgroundColor(Color.parseColor("#44000000"));
+		playAndDetail_layout.addView(waveformView);  
+  
+        final int maxCR = Visualizer.getMaxCaptureRate();  
+          
+        visualizer = new Visualizer(mp3SerBinder.bindGetAudioSessionId());  
+        visualizer.setCaptureSize(256);  
+		visualizer.setDataCaptureListener(
+			new Visualizer.OnDataCaptureListener() {
+				public void onWaveFormDataCapture(Visualizer visualizer,
+						byte[] bytes, int samplingRate) {
+					waveformView.updateVisualizer(bytes);
+				}
+
+				public void onFftDataCapture(Visualizer visualizer,
+						byte[] fft, int samplingRate) {
+					waveformView.updateVisualizer(fft);
+				}
+			}, maxCR / 2, false, true);
+	}
+	
+	public void setLrc() {
+		String lrc = getCurrentMp3LyricPath();
+		detail_lyric_view.readLRC(lrc);
+		detail_lyric_view.setTextSize();
+		detail_lyric_view.setOffsetY(350);
+	}	
+	
+	private String getCurrentMp3LyricPath() {
+		if (mp3SerBinder != null && currentPlayingPosition >= 0) {
+			StringBuilder lyricPath = new StringBuilder();
+	        lyricPath.append(LYRICBASEPATH);
+	        lyricPath.append(mp3List.get(currentPlayingPosition).getTitle());
+	        lyricPath.append(".lrc");
+	        return lyricPath.toString();
+		} else {
+			return "";
+		}
+	}
+	
+	class LrcRunnable implements Runnable {
+		public void run() {
+			boolean isLrcShow = true;
+			isLrcInit = true;
+			while (isLrcShow) {
+				try {
+					Thread.sleep(100);
+					if (mp3SerBinder != null && mp3SerBinder.bindIsPlaying() && slidingLayout.isExpanded()) {
+						detail_lyric_view.setOffsetY(detail_lyric_view.getOffsetY() - detail_lyric_view.setScollSpeed());
+						detail_lyric_view.setCurrentIndex(mp3SerBinder.bindGetCurrentProgress());
+						mHandler.post(mUpdateResults);
+					} else if (slidingLayout.isExpanded()) {
+						isLrcShow = false;
+					}
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+			}
+		}
+	}
+	
+	Handler mHandler = new Handler();
+	Runnable mUpdateResults = new Runnable() {
+		public void run() {
+			detail_lyric_view.invalidate(); // 更新视图
+		}
+	};
+	
+	
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -726,12 +837,6 @@ public class MainActivity extends Activity{
 	}
 
 	@Override
-	protected void onStart() {
-		Log.i(TAG, "onStart");
-		super.onStart();
-	}
-
-	@Override
 	protected void onRestart() {
 		Log.i(TAG, "onRestart");
 		super.onRestart();
@@ -743,8 +848,4 @@ public class MainActivity extends Activity{
 		super.onStop();
 	}
 	
-//	@Override
-//	public void finish() {
-//	    moveTaskToBack(true); //设置该activity永不过期，即不执行onDestroy()
-//	}  
 }
