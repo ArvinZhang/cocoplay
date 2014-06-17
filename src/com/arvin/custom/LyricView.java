@@ -134,7 +134,7 @@ public class LyricView extends View {
 		offsetY = 320;
 
 		paint.setTextAlign(Paint.Align.CENTER);
-		paint.setColor(Color.BLUE);
+		paint.setColor(Color.WHITE);
 		paint.setAntiAlias(true); // 防止锯齿
 		paint.setDither(true); // 防抖动
 		paint.setAlpha(180); // 设置透明度（0-255），值越小越透明

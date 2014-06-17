@@ -28,11 +28,18 @@
         android:id="@+id/detail_title_text"
         android:layout_width="match_parent"
         android:layout_height="50dp"
-        android:background="@drawable/trans_bg"
         android:gravity="center"
         android:textColor="#FFF"
+        android:background="@drawable/trans_bg"
         android:textSize="20sp" />
 
+    <ImageView 
+        android:id="@+id/detail_display_bg"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/detail_play_bar_layout"
+        android:layout_below="@+id/detail_title_text"
+        />
     <com.arvin.custom.LyricView
         android:id="@+id/detail_lyric_view"
         android:layout_width="match_parent"
@@ -41,10 +48,6 @@
         android:layout_below="@+id/detail_title_text"
         android:layout_centerHorizontal="true" />
         
-    <include layout="@layout/lrc_visualizer_layout"/>
-    
-    
-
     <ImageView
         android:id="@+id/detail_switch_lrc_visualizer"
         android:layout_width="wrap_content"
@@ -52,12 +55,18 @@
         android:layout_above="@+id/detail_play_bar_layout"
         android:layout_alignParentRight="true"
         android:src="@drawable/ic_menu_desktop_lyr_default" />
-
+    
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="5dp"
+        android:layout_above="@+id/detail_play_bar_layout"
+        android:scaleType="fitXY"
+        android:src="@drawable/grid_item_bottom_showdow_bg" />
     <RelativeLayout
         android:id="@+id/detail_play_bar_layout"
         android:layout_width="match_parent"
         android:layout_height="70dp"
-        android:background="@drawable/trans_bg"
+        android:background="@drawable/play_bg"
         android:layout_alignParentBottom="true" >
 
         <SeekBar

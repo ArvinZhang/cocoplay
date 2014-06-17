@@ -2,7 +2,6 @@ package com.arvin.cocoplay;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
 
 import android.app.Activity;
@@ -29,6 +28,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.View.OnLongClickListener;
 import android.view.View.OnTouchListener;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -48,7 +48,6 @@ import com.arvin.custom.RefreshableView.PullToRefreshListener;
 import com.arvin.custom.SideBar;
 import com.arvin.custom.SideBar.OnTouchingLetterChangedListener;
 import com.arvin.custom.VisualizerView;
-import com.arvin.pojo.Lyric;
 import com.arvin.pojo.Mp3;
 import com.arvin.tools.Blur;
 import com.arvin.tools.FileUtils;
@@ -62,6 +61,8 @@ public class MainActivity extends Activity{
 	private final static int PLAYING_POSITION_CHANGE = 2;
 	private final static int MP3_REFRESH = 3;
     private final static int ACTIVITY_LOAD_ALBUM_IMAGE = 4;
+
+	protected int UPDATE_SINGER_IMG = 5;
 	
 	public static int currentPosition = -1;	// 初始化为-1，即初始界面不显示item下面的操作栏
 	public static int currentPlayingPosition = -1;
@@ -120,7 +121,10 @@ public class MainActivity extends Activity{
 	private Visualizer visualizer;
 	public static final String LYRICBASEPATH = Environment.getExternalStorageDirectory().getPath() + "/cocoplayer/lyrics/";
 	public static boolean isLrcInit = false;
+	private static boolean isImageBlur = true;
 	
+	private static Bitmap originSingerBitmap;
+	private static Bitmap blurSingerBitmap;
 	
 	private Mp3SerBinder mp3SerBinder;
 	private ServiceConnection mp3SerConn = new ServiceConnection() {
@@ -231,6 +235,9 @@ public class MainActivity extends Activity{
 		playAndDetail_layout = (RelativeLayout) findViewById(R.id.playAndDetail_layout);
 		detail_lyric_view = (LyricView) findViewById(R.id.detail_lyric_view);
 		waveformView = new VisualizerView(MainActivity.this);
+		
+		detail_singer_img = (ImageView) findViewById(R.id.detail_singer_img);
+
 		detail_switch_lrc_visualizer = (ImageView) findViewById(R.id.detail_switch_lrc_visualizer);
 		detail_switch_lrc_visualizer.setOnClickListener(new OnClickListener() {
 			@Override
@@ -243,9 +250,18 @@ public class MainActivity extends Activity{
 						setupVisualizerFxAndUI();
 					}
 					visualizer.setEnabled(true);
-					detail_lyric_view.setVisibility(View.GONE);
 					waveformView.setVisibility(View.VISIBLE);
+					detail_lyric_view.setVisibility(View.GONE);
 				}
+			}
+		});
+		
+		detail_switch_lrc_visualizer.setOnLongClickListener(new OnLongClickListener() {
+			
+			@Override
+			public boolean onLongClick(View arg0) {
+				switchImageBetweenBlurAndClear();
+				return true; // 返回值为true时长按会振动
 			}
 		});
 		
@@ -270,11 +286,6 @@ public class MainActivity extends Activity{
 	    detail_time_used = (TextView) findViewById(R.id.detail_time_used);
 	    detail_time_total = (TextView) findViewById(R.id.detail_time_total);
 	    detail_title_text = (TextView) findViewById(R.id.detail_title_text);
-		
-		detail_singer_img = (ImageView) findViewById(R.id.detail_singer_img);
-		Bitmap originSingerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.adele);
-		Bitmap singerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
-		detail_singer_img.setImageBitmap(singerBitmap);
 		
 		play_songInfo_layout.setOnClickListener(new OnClickListener() {
 			@Override
@@ -454,6 +465,19 @@ public class MainActivity extends Activity{
 		
 		// 定义seekbar触碰操作，触碰到时暂停，抬起播放
 		main_seekBar.setOnSeekBarChangeListener(new MySeekBarListener());
+		
+	}
+	
+	private void switchImageBetweenBlurAndClear() {
+		blurSingerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
+		detail_singer_img.setImageBitmap(blurSingerBitmap);
+		if (isImageBlur) {
+			detail_singer_img.setImageBitmap(originSingerBitmap);
+			isImageBlur = false;
+		} else {
+			detail_singer_img.setImageBitmap(blurSingerBitmap);
+			isImageBlur = true;
+		}
 	}
 	
 	private class MySeekBarListener implements OnSeekBarChangeListener {
@@ -528,7 +552,14 @@ public class MainActivity extends Activity{
 	    		   StringBuffer imgName = new StringBuffer();
 	    		   imgName.append(mp3List.get(currentPlayingPosition).getAlbum());
 	    		   if (imgUtils.isFileExists(imgName.toString())) {
-	    			   album_img.setImageBitmap(imgUtils.getBitmap(imgName.toString()));
+	    			   Bitmap imgInFile = imgUtils.getBitmap(imgName.toString());
+	    			   
+	    			   album_img.setImageBitmap(imgInFile);
+	    			   originSingerBitmap = imgInFile;
+	    			   
+	    			   blurSingerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
+	    			   detail_singer_img.setImageBitmap(blurSingerBitmap);
+	    			   
 	    			   Log.i(TAG, "setContentView 从文件中获取" + imgName);
 	    		   } else {
 	    			   Log.i(TAG, "setContentView 开始下载图片" + imgName + "网络路径：" + url);
@@ -547,6 +578,8 @@ public class MainActivity extends Activity{
 	    		   }
 	    	   } else {
 	    		   album_img.setImageResource(R.drawable.playing_bar_default_avatar);
+	    		  
+	    		   detail_singer_img.setImageResource(R.drawable.playing_bar_default_avatar);
 	    	   }
 	
 			songName_text.setText(mp3.getTitle());
@@ -623,9 +656,10 @@ public class MainActivity extends Activity{
 					initPlayingLayout(mp3List.get(currentPlayingPosition));
 					adapter.notifyDataSetChanged();
 					setPlayBtn();
+		    		
 					break;
 				case ACTIVITY_LOAD_ALBUM_IMAGE:
-					Bitmap bmp=(Bitmap)msg.obj;
+					Bitmap bmp = (Bitmap)msg.obj;
                     Log.i(TAG, "handler - set image");
                     StringBuffer imgName = new StringBuffer();
                     imgName.append(mp3List.get(currentPlayingPosition).getAlbum());
@@ -637,6 +671,18 @@ public class MainActivity extends Activity{
 						e.printStackTrace();
 					}
 		        	album_img.setImageBitmap(bmp);
+		        	
+		        	originSingerBitmap = bmp;
+		    		blurSingerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
+		    		detail_singer_img.setImageBitmap(blurSingerBitmap);
+		    		if (isImageBlur) {
+		    			detail_singer_img.setImageBitmap(originSingerBitmap);
+		    			isImageBlur = false;
+		    		} else {
+		    			detail_singer_img.setImageBitmap(blurSingerBitmap);
+		    			isImageBlur = true;
+		    		}
+		        	break;
 				default:
 					break;
 			}
@@ -660,7 +706,9 @@ public class MainActivity extends Activity{
 				currentPlayingPosition = intent.getIntExtra("currentMp3Position", 0);
 				currentSeekMax = intent.getIntExtra("maxDuration", 0);				
 				int max = currentSeekMax;
+				
 				Log.v(TAG, "[Main ProgressReciver] Receive duration : " + max);
+				
 				main_seekBar.setMax(currentSeekMax);
 				detail_seekBar.setMax(currentSeekMax);
 				detail_title_text.setText(mp3List.get(currentPlayingPosition).getTitle());
@@ -728,8 +776,9 @@ public class MainActivity extends Activity{
                 ViewGroup.LayoutParams.MATCH_PARENT,  
                 400)); 
 		lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE); 
+		lp.setMargins(10, 0, 10, 0);
 		waveformView.setLayoutParams(lp);
-		waveformView.setBackgroundColor(Color.parseColor("#44000000"));
+//		waveformView.setBackgroundColor(Color.parseColor("#44000000"));
 		playAndDetail_layout.addView(waveformView);  
   
         final int maxCR = Visualizer.getMaxCaptureRate();  
@@ -752,6 +801,8 @@ public class MainActivity extends Activity{
 	
 	public void setLrc() {
 		String lrc = getCurrentMp3LyricPath();
+		
+		Log.i(TAG, "in setLrc lrc=" + lrc);
 		detail_lyric_view.readLRC(lrc);
 		detail_lyric_view.setTextSize();
 		detail_lyric_view.setOffsetY(350);
