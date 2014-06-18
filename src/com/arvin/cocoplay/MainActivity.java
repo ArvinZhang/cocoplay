@@ -1,7 +1,6 @@
 package com.arvin.cocoplay;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.List;
 
 import android.app.Activity;
@@ -61,6 +60,8 @@ public class MainActivity extends Activity{
 	private final static int PLAYING_POSITION_CHANGE = 2;
 	private final static int MP3_REFRESH = 3;
     private final static int ACTIVITY_LOAD_ALBUM_IMAGE = 4;
+    private final static int LOAD_IMAGE = 5;
+    private final static int BLUE_RADIUS = 25;
 
 	protected int UPDATE_SINGER_IMG = 5;
 	
@@ -125,6 +126,8 @@ public class MainActivity extends Activity{
 	
 	private static Bitmap originSingerBitmap;
 	private static Bitmap blurSingerBitmap;
+	
+	private Bitmap defBmp;
 	
 	private Mp3SerBinder mp3SerBinder;
 	private ServiceConnection mp3SerConn = new ServiceConnection() {
@@ -210,6 +213,7 @@ public class MainActivity extends Activity{
 	}
 
 	private void initViews() {
+		defBmp = BitmapFactory.decodeResource(getResources(), R.drawable.playing_bar_default_avatar);
 		songName_text = (TextView) findViewById(R.id.songName_text);
 		singer_text = (TextView) findViewById(R.id.singer_text);
 		usedTime_text = (TextView) findViewById(R.id.usedTime_text);
@@ -237,6 +241,9 @@ public class MainActivity extends Activity{
 		waveformView = new VisualizerView(MainActivity.this);
 		
 		detail_singer_img = (ImageView) findViewById(R.id.detail_singer_img);
+		originSingerBitmap = BitmapFactory.decodeResource(getResources(), R.drawable.playing_bar_default_avatar);
+		blurSingerBitmap = Blur.fastblur(MainActivity.this, originSingerBitmap, BLUE_RADIUS);
+		detail_singer_img.setImageBitmap(blurSingerBitmap);
 
 		detail_switch_lrc_visualizer = (ImageView) findViewById(R.id.detail_switch_lrc_visualizer);
 		detail_switch_lrc_visualizer.setOnClickListener(new OnClickListener() {
@@ -369,6 +376,7 @@ public class MainActivity extends Activity{
 		
 		playRandom_layout.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
+				detail_mode_img.setImageResource(R.drawable.ic_player_mode_random);
 				mp3SerBinder.bindPlayRandom();
 			}
 		});
@@ -469,12 +477,11 @@ public class MainActivity extends Activity{
 	}
 	
 	private void switchImageBetweenBlurAndClear() {
-		blurSingerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
-		detail_singer_img.setImageBitmap(blurSingerBitmap);
 		if (isImageBlur) {
 			detail_singer_img.setImageBitmap(originSingerBitmap);
 			isImageBlur = false;
 		} else {
+			blurSingerBitmap = Blur.fastblur(MainActivity.this, originSingerBitmap, BLUE_RADIUS);
 			detail_singer_img.setImageBitmap(blurSingerBitmap);
 			isImageBlur = true;
 		}
@@ -547,40 +554,10 @@ public class MainActivity extends Activity{
 
 	private void initPlayingLayout(final Mp3 mp3) {
 		if (mp3 != null) {
-			final String url = "http://i1217.photobucket.com/albums/dd382/winningprizes/a0f5c39c4b6d4f5b792002a8451898a1.jpg"; 
-			if (mp3List.get(currentPlayingPosition).getTitle().toUpperCase().contains("ADELE")) {
-	    		   StringBuffer imgName = new StringBuffer();
-	    		   imgName.append(mp3List.get(currentPlayingPosition).getAlbum());
-	    		   if (imgUtils.isFileExists(imgName.toString())) {
-	    			   Bitmap imgInFile = imgUtils.getBitmap(imgName.toString());
-	    			   
-	    			   album_img.setImageBitmap(imgInFile);
-	    			   originSingerBitmap = imgInFile;
-	    			   
-	    			   blurSingerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
-	    			   detail_singer_img.setImageBitmap(blurSingerBitmap);
-	    			   
-	    			   Log.i(TAG, "setContentView 从文件中获取" + imgName);
-	    		   } else {
-	    			   Log.i(TAG, "setContentView 开始下载图片" + imgName + "网络路径：" + url);
-		    		   new Thread(new Runnable() {  
-		    			   @Override  
-		                   public void run() {  
-		                       // TODO Auto-generated method stub  
-		                       Bitmap bmp = new Tools().getURLimage(url);  
-		                       Message msg = new Message();  
-		                       Log.i(TAG, "setContentView - loading image");
-		                       msg.what = ACTIVITY_LOAD_ALBUM_IMAGE;  
-		                       msg.obj = bmp;  
-		                       handler.sendMessage(msg);  
-		                   }  
-		               }).start();
-	    		   }
-	    	   } else {
-	    		   album_img.setImageResource(R.drawable.playing_bar_default_avatar);
-	    		  
-	    		   detail_singer_img.setImageResource(R.drawable.playing_bar_default_avatar);
-	    	   }
+			
+			String fileName = mp3List.get(currentPlayingPosition).getTitle();
+			display(R.id.album_img, fileName, false, defBmp);
+			display(R.id.detail_singer_img, fileName, true, defBmp);
 	
 			songName_text.setText(mp3.getTitle());
 			singer_text.setText(mp3.getArtist());
@@ -595,6 +572,35 @@ public class MainActivity extends Activity{
 			detail_time_total.setText("--:--");
 		}
 		
+	}
+	
+	private void display(final int recId, final String fileName, final boolean isBlur, final Bitmap defBmp) {
+		originSingerBitmap = defBmp;
+		
+		if (imgUtils.isFileExists(fileName)) {
+
+			Bitmap imgToSet = imgUtils.getBitmap(fileName);
+			originSingerBitmap = imgToSet;
+			Message msg = new Message();
+			msg.what = ACTIVITY_LOAD_ALBUM_IMAGE;
+			Bundle bundle = new Bundle();
+			bundle.putParcelable("bitmap", imgToSet);
+			bundle.putInt("recId", recId);
+			bundle.putParcelable("defBmp", defBmp);
+    		bundle.putBoolean("isBlur", isBlur);
+			msg.setData(bundle);
+			handler.sendMessage(msg);
+		}  else {
+			Message msg = new Message();
+			msg.what = ACTIVITY_LOAD_ALBUM_IMAGE;
+			Bundle bundle = new Bundle();
+			bundle.putParcelable("bitmap", null);
+			bundle.putInt("recId", recId);
+			bundle.putParcelable("defBmp", defBmp);
+    		bundle.putBoolean("isBlur", isBlur);
+			msg.setData(bundle);
+			handler.sendMessage(msg);
+		}
 	}
 	
 	private void setPlayBtn() {
@@ -659,35 +665,42 @@ public class MainActivity extends Activity{
 		    		
 					break;
 				case ACTIVITY_LOAD_ALBUM_IMAGE:
-					Bitmap bmp = (Bitmap)msg.obj;
-                    Log.i(TAG, "handler - set image");
-                    StringBuffer imgName = new StringBuffer();
-                    imgName.append(mp3List.get(currentPlayingPosition).getAlbum());
-                    try {
-						imgUtils.savaBitmap(imgName.toString(), bmp);
-						Log.i(TAG, "handler 保存图片" + imgName + "成功");
-					} catch (IOException e) {
-						Log.i(TAG, "handler 保存图片" + imgName + "失败");
-						e.printStackTrace();
-					}
-		        	album_img.setImageBitmap(bmp);
-		        	
-		        	originSingerBitmap = bmp;
-		    		blurSingerBitmap = new Blur().fastblur(MainActivity.this, originSingerBitmap, 50);
-		    		detail_singer_img.setImageBitmap(blurSingerBitmap);
-		    		if (isImageBlur) {
-		    			detail_singer_img.setImageBitmap(originSingerBitmap);
-		    			isImageBlur = false;
-		    		} else {
-		    			detail_singer_img.setImageBitmap(blurSingerBitmap);
-		    			isImageBlur = true;
-		    		}
+					Bundle bundle = msg.getData();
+					setDisplayWithBundle(bundle);
 		        	break;
+				case LOAD_IMAGE:
+					String fileName = mp3List.get(currentPlayingPosition).getTitle();
+					display(R.id.album_img, fileName, false, defBmp);
+					display(R.id.detail_singer_img, fileName, true, defBmp);
 				default:
 					break;
 			}
 		}
 	};
+	
+	public void setDisplayWithBundle(Bundle bundle) {
+		Bitmap bmp = (Bitmap) bundle.get("bitmap");
+		Bitmap defBmp = (Bitmap) bundle.get("defBmp");
+		boolean isBlur = bundle.getBoolean("isBlur");
+		int recId = bundle.getInt("recId");
+		ImageView imgView = (ImageView) findViewById(recId);
+		
+		if (bmp != null && isBlur) {
+			if (isImageBlur) {
+				Bitmap bluredBmp = Blur.fastblur(MainActivity.this, bmp, BLUE_RADIUS);
+				imgView.setImageBitmap(bluredBmp);
+			} else {
+				imgView.setImageBitmap(bmp);
+			}
+		} else if (bmp != null && !isBlur) {
+			imgView.setImageBitmap(bmp);
+		} else if (bmp == null && isBlur && defBmp != null) {
+			Bitmap bluredBmp = Blur.fastblur(MainActivity.this, defBmp, BLUE_RADIUS);
+			imgView.setImageBitmap(bluredBmp);
+		} else if (bmp == null && !isBlur && defBmp != null) {
+			imgView.setImageBitmap(defBmp);
+		}
+	} 
 	
 	class ProgressReceiver extends BroadcastReceiver{
 		@Override
@@ -725,6 +738,8 @@ public class MainActivity extends Activity{
 			} else if (Mp3Service.INTENT_ACTION_MODE.equals(action)) {
 				int currentMode = mp3SerBinder.bindGetCurrentPlayMode();
 				updateModeImg(currentMode);
+			} else if (Mp3Service.INTENT_ACTION_LOAD_IMAGE.equals(action)) {
+				handler.sendEmptyMessage(LOAD_IMAGE);
 			}
 		}
 	}
@@ -766,6 +781,7 @@ public class MainActivity extends Activity{
 		intentFilter.addAction(Mp3Service.INTENT_ACTION_PAUSE);
 		intentFilter.addAction(Mp3Service.INTENT_ACTION_PLAY);
 		intentFilter.addAction(Mp3Service.INTENT_ACTION_MODE);
+		intentFilter.addAction(Mp3Service.INTENT_ACTION_LOAD_IMAGE);
 		registerReceiver(progressReceiver, intentFilter);
 	}
 	
@@ -774,7 +790,7 @@ public class MainActivity extends Activity{
 		
 		RelativeLayout.LayoutParams lp=new RelativeLayout.LayoutParams(new ViewGroup.LayoutParams(  
                 ViewGroup.LayoutParams.MATCH_PARENT,  
-                400)); 
+                500)); 
 		lp.addRule(RelativeLayout.CENTER_IN_PARENT, RelativeLayout.TRUE); 
 		lp.setMargins(10, 0, 10, 0);
 		waveformView.setLayoutParams(lp);

@@ -67,6 +67,7 @@ public class Mp3Service extends Service{
 	public static final String INTENT_ACTION_PREVIOUS = "com.arvin.cocoplay.INTENT_ACTION_PREVIOUS";
 	public static final String INTENT_ACTION_PAUSE = "com.arvin.cocoplay.INTENT_ACTION_PAUSE";
 	public static final String INTENT_ACTION_MODE = "com.arvin.cocoplay.INTENT_ACTION_MODE";
+	public static final String INTENT_ACTION_LOAD_IMAGE = "com.arvin.cocoplay.INTENT_ACTION_LOAD_IMAGE";
 
     private Notification notification;
     private NotificationManager notificationManager;
@@ -246,13 +247,13 @@ public class Mp3Service extends Service{
        midContentView = new RemoteViews(this.getPackageName(), R.layout.notification);
        final String url = "http://i1217.photobucket.com/albums/dd382/winningprizes/a0f5c39c4b6d4f5b792002a8451898a1.jpg"; 
        if (currentMp3Position >= 0 && mp3List.size() > 0) {
-    	   Log.i(TAG, "setContentView - album:" + mp3List.get(currentMp3Position).getAlbum() 
+    	   Log.i(TAG, "setContentView - getTitle:" + mp3List.get(currentMp3Position).getTitle() 
     			   + " of song:" + mp3List.get(currentMp3Position).getTitle() 
     			   + " album_id:" + mp3List.get(currentMp3Position).getAlbum_id());
     	   
     	   if (mp3List.get(currentMp3Position).getTitle().toUpperCase().contains("ADELE")) {
     		   StringBuffer imgName = new StringBuffer();
-    		   imgName.append(mp3List.get(currentMp3Position).getAlbum());
+    		   imgName.append(mp3List.get(currentMp3Position).getTitle());
     		   if (imgUtils.isFileExists(imgName.toString())) {
     			   midContentView.setImageViewBitmap(R.id.notification_img, imgUtils.getBitmap(imgName.toString()));
     			   Log.i(TAG, "setContentView 从文件中获取" + imgName);
@@ -468,7 +469,7 @@ public class Mp3Service extends Service{
 					Bitmap bmp = (Bitmap) msg.obj;
                     Log.i(TAG, "handler - set image");
                     StringBuffer imgName = new StringBuffer();
-                    imgName.append(mp3List.get(currentMp3Position).getAlbum());
+                    imgName.append(mp3List.get(currentMp3Position).getTitle());
                     try {
 						imgUtils.savaBitmap(imgName.toString(), bmp);
 						Log.i(TAG, "handler 保存图片" + imgName + "成功");
@@ -478,6 +479,10 @@ public class Mp3Service extends Service{
 					}
 		        	midContentView.setImageViewBitmap(R.id.notification_img, bmp);
 		        	notifyMusicBox();
+		        	
+		        	Intent intent = new Intent();
+		    		intent.setAction(INTENT_ACTION_LOAD_IMAGE);
+		    		sendBroadcast(intent);
 					break;
 				default:
 					break;
@@ -545,7 +550,7 @@ public class Mp3Service extends Service{
 			
 	        if (currentMp3Position >= 0 && mp3List.size() > 0) {
 	        	if (mp3List.get(currentMp3Position).getTitle().toUpperCase().contains("ADELE")) {
-	        		imgName.append(mp3List.get(currentMp3Position).getAlbum());
+	        		imgName.append(mp3List.get(currentMp3Position).getTitle());
 	        	}
 	        }
 		} else {

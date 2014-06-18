@@ -41,7 +41,7 @@ public class FileUtils {
 	/**
 	 * 保存Image的目录名
 	 */
-	private final static String FOLDER_NAME = "/cocoplayImage";
+	private final static String FOLDER_NAME = "/cocoplayer/images";
 
 	private static FileUtils fileUtils = null;
 	

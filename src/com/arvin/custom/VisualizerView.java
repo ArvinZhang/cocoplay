@@ -58,7 +58,7 @@ public class VisualizerView extends View {
 			mPoints = new float[mBytes.length * 4];
 		}
 
-		mRect.set(0, 0, getWidth(), getHeight());
+		mRect.set(0, 0, getWidth(), 500);
 
 		// 绘制频谱
 		final int baseX = mRect.width() / mSpectrumNum;
@@ -73,9 +73,8 @@ public class VisualizerView extends View {
 
 			mPoints[i * 4] = xi;
 			mPoints[i * 4 + 1] = height;
-
 			mPoints[i * 4 + 2] = xi;
-			mPoints[i * 4 + 3] = height - mBytes[i];
+			mPoints[i * 4 + 3] = height - mBytes[i]*3;
 		}
 
 		canvas.drawLines(mPoints, mForePaint);

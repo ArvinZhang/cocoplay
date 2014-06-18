@@ -12,8 +12,7 @@
         android:id="@+id/detail_singer_img"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:scaleType="centerCrop"
-        android:src="@drawable/adele" />
+        android:scaleType="centerCrop"/>
 
     <ImageView
         android:id="@+id/detail_trans_bg_img"
@@ -23,15 +22,21 @@
         android:layout_below="@+id/detail_title_text"
         android:scaleType="fitXY"
         android:src="@drawable/trans_bg" />
-
-    <TextView
+    
+    <com.arvin.custom.AlwaysMarqueeTextView
         android:id="@+id/detail_title_text"
         android:layout_width="match_parent"
         android:layout_height="50dp"
         android:gravity="center"
         android:textColor="#FFF"
         android:background="@drawable/trans_bg"
-        android:textSize="20sp" />
+        android:textSize="20sp" 
+        android:ellipsize="marquee"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:marqueeRepeatLimit="marquee_forever"
+        android:scrollHorizontally="true"
+        android:singleLine="true"/>
 
     <ImageView 
         android:id="@+id/detail_display_bg"
