@@ -74,7 +74,7 @@ public class VisualizerView extends View {
 			mPoints[i * 4] = xi;
 			mPoints[i * 4 + 1] = height;
 			mPoints[i * 4 + 2] = xi;
-			mPoints[i * 4 + 3] = height - mBytes[i]*3;
+			mPoints[i * 4 + 3] = height - mBytes[i]*3; // 这里可以调节频谱的高度
 		}
 
 		canvas.drawLines(mPoints, mForePaint);

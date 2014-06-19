@@ -889,8 +889,12 @@ public class MainActivity extends Activity{
 	@Override  
     public boolean onKeyDown(int keyCode, KeyEvent event) {  
         if (keyCode == KeyEvent.KEYCODE_BACK ) {
-        	moveTaskToBack(true); //设置该activity永不过期，即不执行onDestroy()
-        	onStop();
+        	if (slidingLayout.isExpanded()) {
+        		slidingLayout.collapsePane();
+        	} else {
+        		moveTaskToBack(true); //设置该activity永不过期，即不执行onDestroy()
+        		onStop();
+        	}
         }
           
         return false;  
