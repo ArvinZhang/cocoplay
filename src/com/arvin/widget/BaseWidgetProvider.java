@@ -7,6 +7,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.sax.StartElementListener;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -14,6 +15,7 @@ import com.arvin.cocoplay.MainActivity;
 import com.arvin.cocoplay.Mp3Service;
 import com.arvin.cocoplay.R;
 import com.arvin.tools.FileUtils;
+import com.arvin.tools.Tools;
 
 /**   
  * @Title: BaseWidgetProvider.java
@@ -38,6 +40,9 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 	protected int progressbarId;
 	protected int playOrPauseButtonId;
 	protected int songNameTextId;
+	protected String action;
+	protected Intent baseIntent;
+	protected String timeToShow;
 	
 	
 	@Override
@@ -46,42 +51,22 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 		
 		setRemoteViews(context);
 		initCommonView();
-		String action = intent.getAction();
+		action = intent.getAction();
+		baseIntent = intent;
 
 		if (action.equals(Mp3Service.INTENT_ACTION_PLAY)) {
-			String str = intent.getStringExtra(Mp3Service.INTENT_ACTION_PLAY);
-			Log.i(TAG, "INTENT_ACTION_PLAY onReceive - title:" + str);
-			
-			views.setImageViewResource(playOrPauseButtonId, R.drawable.btn_simple_pause);
-			views.setTextViewText(songNameTextId, intent.getStringExtra(Mp3Service.INTENT_ACTION_PLAY));
-			
-			String imgName = intent.getStringExtra("album_img");
-
-			Bitmap bmp = null;
-			imgUtils = FileUtils.getInstance(context);
-    		if (!imgName.equals("") && imgUtils.isFileExists(imgName)) {
-    			bmp = imgUtils.getBitmap(imgName);
-    			Log.i(TAG, "play 从文件中获取" + imgName);
-    			views.setImageViewBitmap(albumImgId, bmp);
-    		} else {
-    			views.setImageViewResource(albumImgId, R.drawable.playing_bar_default_avatar);
-    		}
-			
+			setWhenPlay(context, intent);
 		} else if (action.equals(Mp3Service.INTENT_ACTION_PAUSE)) {
-			views.setImageViewResource(playOrPauseButtonId, R.drawable.btn_simple_play);
+			setWhenPause();
 		} else if (action.equals(Mp3Service.ACTION_UDPATE_PROGRESS)) {
-			int currentDuration = intent.getIntExtra("progress", 0);
-			int max = intent.getIntExtra("maxDuration", 0);
-			
-			Log.i(TAG, "currentDuration=" + currentDuration + " max=" + max);
-			if (max <= 0) {
-				// 如果indeterminate为true的话，相当于调用
-				// ProgressBar.setMax, ProgressBar.setProgress和ProgressBar.setIndeterminate，
-				// 那么最大值和进度被忽略
-				views.setProgressBar(progressbarId, max, currentDuration, true);
+			setWhenUpdateProgress(intent);
+		} else if (action.equals(Mp3Service.INTENT_ACTION_WIDGET_REFREASH)) {
+			if (intent.getBooleanExtra("isPlaying", true)) {
+				setWhenPlay(context, intent);
 			} else {
-				views.setProgressBar(progressbarId, max, currentDuration, false);
+				setWhenPause();
 			}
+			setWhenUpdateProgress(intent);
 		}
 		
 		additionOnReceive();
@@ -90,6 +75,52 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 		AppWidgetManager mgr = AppWidgetManager.getInstance(context);
 		setWidgetClass();
 		mgr.updateAppWidget(new ComponentName(context, widgetClass), views);
+	}
+	
+	public void setWhenPlay(Context context, Intent intent) {
+		String str = intent.getStringExtra(Mp3Service.INTENT_ACTION_PLAY);
+		Log.i(TAG, "INTENT_ACTION_PLAY onReceive - title:" + str);
+		
+		views.setImageViewResource(playOrPauseButtonId, R.drawable.btn_simple_pause);
+		views.setTextViewText(songNameTextId, intent.getStringExtra("song_title"));
+		
+		String imgName = intent.getStringExtra("album_img");
+
+		Bitmap bmp = null;
+		imgUtils = FileUtils.getInstance(context);
+		if (!imgName.equals("") && imgUtils.isFileExists(imgName)) {
+			bmp = imgUtils.getBitmap(imgName);
+			Log.i(TAG, "play 从文件中获取" + imgName);
+			views.setImageViewBitmap(albumImgId, bmp);
+		} else {
+			views.setImageViewResource(albumImgId, R.drawable.playing_bar_default_avatar);
+		}
+	}
+	
+	public void setWhenPause() {
+		views.setImageViewResource(playOrPauseButtonId, R.drawable.btn_simple_play);
+	}
+	
+	public void setWhenUpdateProgress(Intent intent) {
+		int currentDuration = intent.getIntExtra("progress", 0);
+		int max = intent.getIntExtra("maxDuration", 0);
+		
+		Tools tools = new Tools();
+		StringBuilder timeStrBuilder = new StringBuilder();
+		timeStrBuilder.append(tools.durationFormat(currentDuration));
+		timeStrBuilder.append("/");
+		timeStrBuilder.append(tools.durationFormat(max));
+		timeToShow = timeStrBuilder.toString();
+		
+		Log.i(TAG, "currentDuration=" + currentDuration + " max=" + max);
+		if (max <= 0) {
+			// 如果indeterminate为true的话，相当于调用
+			// ProgressBar.setMax, ProgressBar.setProgress和ProgressBar.setIndeterminate，
+			// 那么最大值和进度被忽略
+			views.setProgressBar(progressbarId, max, currentDuration, true);
+		} else {
+			views.setProgressBar(progressbarId, max, currentDuration, false);
+		}
 	}
 
 	@Override
@@ -117,7 +148,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 		previousIntent.setClass(context, Mp3Service.class);
 		previousPendingIntent = PendingIntent.getService(context, 0, previousIntent, 0);
 		
-		additionOnUpdate();
+		additionOnUpdate(context);
 		
 		AppWidgetManager mgr = AppWidgetManager.getInstance(context);
 		setWidgetClass();
@@ -127,17 +158,36 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 	protected abstract void setRemoteViews(Context context);
 	protected abstract void initCommonView();
 	protected abstract void additionOnReceive();
-	protected abstract void additionOnUpdate();
+	protected abstract void additionOnUpdate(Context context);
 	protected abstract void setWidgetClass();
+	
+	protected void updateModeImg(int modeViewId, int mode) {
+		switch (mode) {
+		case Mp3Service.MODE_LIST_LOOP:
+			views.setImageViewResource(modeViewId, R.drawable.ic_player_mode_all);
+			break;
+		case Mp3Service.MODE_RANDOM:
+			views.setImageViewResource(modeViewId, R.drawable.ic_player_mode_random);
+			break;
+		case Mp3Service.MODE_SEQUENCE:
+			views.setImageViewResource(modeViewId, R.drawable.ic_player_mode_sequence);
+			break;
+		case Mp3Service.MODE_SINGLE_LOOP:
+			views.setImageViewResource(modeViewId, R.drawable.ic_player_mode_single);
+			break;
+		default:
+			break;
+		}
+	}
 
 	@Override
 	public void onEnabled(Context context) {
 		super.onEnabled(context);
 
 		imgUtils = FileUtils.getInstance(context);
-//		Intent intent = new Intent(context, Mp3Service.class);
-//		context.startService(intent);
-		
+		Intent intent = new Intent(Mp3Service.INTENT_ACTION_INITIAL_WIDGET);
+		intent.setClass(context, Mp3Service.class);
+		context.startService(intent);
 	}
 
 	@Override

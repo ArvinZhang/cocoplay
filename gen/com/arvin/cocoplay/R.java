@@ -184,7 +184,7 @@ containing a value of this type.
         public static final int widget_minilyric_on=0x7f020054;
     }
     public static final class id {
-        public static final int action_logout=0x7f0b005d;
+        public static final int action_logout=0x7f0b006a;
         public static final int album_img=0x7f0b0011;
         public static final int app_name=0x7f0b0005;
         public static final int arrow=0x7f0b0024;
@@ -257,27 +257,40 @@ containing a value of this type.
         public static final int totalTime_text=0x7f0b0018;
         public static final int updated_at=0x7f0b0027;
         public static final int usedTime_text=0x7f0b0017;
-        public static final int widget_album_img=0x7f0b0055;
-        public static final int widget_layout=0x7f0b0054;
-        public static final int widget_middle_layout=0x7f0b0048;
-        public static final int widget_middle_lrc_switch=0x7f0b0053;
-        public static final int widget_middle_mode=0x7f0b004f;
-        public static final int widget_middle_op_layout=0x7f0b004e;
-        public static final int widget_middle_op_next=0x7f0b0052;
-        public static final int widget_middle_op_playorpause=0x7f0b0051;
-        public static final int widget_middle_op_previous=0x7f0b0050;
-        public static final int widget_middle_progressbar=0x7f0b004d;
-        public static final int widget_middle_singer=0x7f0b004c;
-        public static final int widget_middle_singer_img=0x7f0b0049;
-        public static final int widget_middle_song=0x7f0b004b;
-        public static final int widget_middle_song_info=0x7f0b004a;
-        public static final int widget_op_layout=0x7f0b0059;
-        public static final int widget_op_next=0x7f0b005c;
-        public static final int widget_op_playorpause=0x7f0b005b;
-        public static final int widget_op_previous=0x7f0b005a;
-        public static final int widget_progressbar=0x7f0b0058;
-        public static final int widget_song_layout=0x7f0b0056;
-        public static final int widget_songname_text=0x7f0b0057;
+        public static final int widget_album_img=0x7f0b0062;
+        public static final int widget_big_layout=0x7f0b0048;
+        public static final int widget_big_lrc_switch=0x7f0b0053;
+        public static final int widget_big_mode=0x7f0b004f;
+        public static final int widget_big_op_layout=0x7f0b004e;
+        public static final int widget_big_op_next=0x7f0b0052;
+        public static final int widget_big_op_playorpause=0x7f0b0051;
+        public static final int widget_big_op_previous=0x7f0b0050;
+        public static final int widget_big_progressbar=0x7f0b004d;
+        public static final int widget_big_singer_img=0x7f0b0049;
+        public static final int widget_big_song=0x7f0b004b;
+        public static final int widget_big_song_info=0x7f0b004a;
+        public static final int widget_big_time=0x7f0b004c;
+        public static final int widget_layout=0x7f0b0061;
+        public static final int widget_middle_album=0x7f0b0059;
+        public static final int widget_middle_layout=0x7f0b0054;
+        public static final int widget_middle_lrc_switch=0x7f0b0060;
+        public static final int widget_middle_mode=0x7f0b005c;
+        public static final int widget_middle_op_layout=0x7f0b005b;
+        public static final int widget_middle_op_next=0x7f0b005f;
+        public static final int widget_middle_op_playorpause=0x7f0b005e;
+        public static final int widget_middle_op_previous=0x7f0b005d;
+        public static final int widget_middle_progressbar=0x7f0b005a;
+        public static final int widget_middle_singer=0x7f0b0058;
+        public static final int widget_middle_singer_img=0x7f0b0055;
+        public static final int widget_middle_song=0x7f0b0057;
+        public static final int widget_middle_song_info=0x7f0b0056;
+        public static final int widget_op_layout=0x7f0b0066;
+        public static final int widget_op_next=0x7f0b0069;
+        public static final int widget_op_playorpause=0x7f0b0068;
+        public static final int widget_op_previous=0x7f0b0067;
+        public static final int widget_progressbar=0x7f0b0065;
+        public static final int widget_song_layout=0x7f0b0063;
+        public static final int widget_songname_text=0x7f0b0064;
     }
     public static final class layout {
         public static final int activity_main=0x7f030000;
@@ -288,8 +301,9 @@ containing a value of this type.
         public static final int song_detail=0x7f030005;
         public static final int song_list_item=0x7f030006;
         public static final int test=0x7f030007;
-        public static final int widget_middle=0x7f030008;
-        public static final int widget_small=0x7f030009;
+        public static final int widget_big=0x7f030008;
+        public static final int widget_middle=0x7f030009;
+        public static final int widget_small=0x7f03000a;
     }
     public static final class menu {
         public static final int main=0x7f0a0000;
@@ -342,8 +356,9 @@ containing a value of this type.
         public static final int AppTheme=0x7f090001;
     }
     public static final class xml {
-        public static final int middle_widget_provider=0x7f050000;
-        public static final int small_widget_provider=0x7f050001;
+        public static final int big_widget_provider=0x7f050000;
+        public static final int middle_widget_provider=0x7f050001;
+        public static final int small_widget_provider=0x7f050002;
     }
     public static final class styleable {
         /** Attributes that can be used with a SlidingUpPanelLayout.

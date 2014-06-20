@@ -5,7 +5,7 @@
     android:versionName="1.0" >
 
     <uses-sdk
-        android:minSdkVersion="16"
+        android:minSdkVersion="15"
         android:targetSdkVersion="19" />
 
     <uses-permission android:name="android.permission.INTERNET" />
@@ -27,6 +27,7 @@
                 <action android:name="com.arvin.cocoplay.INTENT_ACTION_PLAY" />
                 <action android:name="com.arvin.cocoplay.INTENT_ACTION_PAUSE" />
                 <action android:name="com.arvin.cocoplay.ACTION_UPDATE_PROGRESS" />
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_WIDGET_REFREASH"/>
             </intent-filter>
 
             <meta-data
@@ -43,11 +44,31 @@
                 <action android:name="com.arvin.cocoplay.INTENT_ACTION_PLAY" />
                 <action android:name="com.arvin.cocoplay.INTENT_ACTION_PAUSE" />
                 <action android:name="com.arvin.cocoplay.ACTION_UPDATE_PROGRESS" />
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_MODE"/>
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_WIDGET_REFREASH"/>
             </intent-filter>
 
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/middle_widget_provider" />
+        </receiver>
+        
+        <!-- 声明widget对应的AppWidgetProvider -->
+        <receiver
+            android:name="com.arvin.widget.BigWidgetProvider"
+            android:label="@string/app_name" >
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_PLAY" />
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_PAUSE" />
+                <action android:name="com.arvin.cocoplay.ACTION_UPDATE_PROGRESS" />
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_MODE"/>
+                <action android:name="com.arvin.cocoplay.INTENT_ACTION_WIDGET_REFREASH"/>
+            </intent-filter>
+
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/big_widget_provider" />
         </receiver>
 
         <activity

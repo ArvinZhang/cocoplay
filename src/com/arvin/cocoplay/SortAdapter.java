@@ -88,7 +88,7 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 			if (num < 10) {
 				numStrBuf.append("00");
 				viewHolder.song_num_text.setText(numStrBuf.append(num));
-			} else if (num >= 10 && position < 100) {
+			} else if (num >= 10 && position < 99) {
 				numStrBuf.append(0);
 				viewHolder.song_num_text.setText(numStrBuf.append(num));
 			} else {

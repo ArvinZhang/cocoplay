@@ -53,7 +53,7 @@ public class SmallWidgetProvider extends BaseWidgetProvider {
 	}
 
 	@Override
-	protected void additionOnUpdate() {
+	protected void additionOnUpdate(Context context) {
 		views.setOnClickPendingIntent(R.id.widget_op_next, nextPendingIntent);
 		views.setOnClickPendingIntent(R.id.widget_op_playorpause, playOrPausePendingIntent);
 		views.setOnClickPendingIntent(R.id.widget_op_previous, previousPendingIntent);

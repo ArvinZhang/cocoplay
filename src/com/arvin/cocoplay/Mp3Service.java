@@ -67,7 +67,10 @@ public class Mp3Service extends Service{
 	public static final String INTENT_ACTION_PREVIOUS = "com.arvin.cocoplay.INTENT_ACTION_PREVIOUS";
 	public static final String INTENT_ACTION_PAUSE = "com.arvin.cocoplay.INTENT_ACTION_PAUSE";
 	public static final String INTENT_ACTION_MODE = "com.arvin.cocoplay.INTENT_ACTION_MODE";
+	public static final String INTENT_ACTION_CHANGE_SERVICE_MODE = "com.arvin.cocoplay.INTENT_ACTION_CHANGE_SERVICE_MODE";
 	public static final String INTENT_ACTION_LOAD_IMAGE = "com.arvin.cocoplay.INTENT_ACTION_LOAD_IMAGE";
+	public static final String INTENT_ACTION_INITIAL_WIDGET = "com.arvin.cocoplay.INTENT_ACTION_INITIAL_WIDGET";
+	public static final String INTENT_ACTION_WIDGET_REFREASH = "com.arvin.cocoplay.INTENT_ACTION_WIDGET_REFREASH";
 
     private Notification notification;
     private NotificationManager notificationManager;
@@ -332,10 +335,31 @@ public class Mp3Service extends Service{
 				playNext();
 			} else if (intent.getAction().equals(INTENT_ACTION_PREVIOUS)) {
 				playPrevious();
+			} else if (intent.getAction().equals(INTENT_ACTION_CHANGE_SERVICE_MODE)) {
+				updateMode();
+			} else if (intent.getAction().equals(INTENT_ACTION_INITIAL_WIDGET)) {
+				toInitWidget();
 			}
 		}
 		
 		return START_STICKY;
+	}
+
+	private void toInitWidget() {
+		Intent intent = new Intent(INTENT_ACTION_WIDGET_REFREASH);
+		intent.putExtra("progress", mediaPlayer.getCurrentPosition());
+		intent.putExtra("title", mp3List.get(currentMp3Position).getTitle());
+		intent.putExtra("maxDuration", maxDuration);
+		intent.putExtra("singer", mp3List.get(currentMp3Position).getArtist());
+		intent.putExtra("album", mp3List.get(currentMp3Position).getAlbum());
+		StringBuffer imgName = new StringBuffer();
+        if (currentMp3Position >= 0 && mp3List.size() > 0) {
+        	imgName.append(mp3List.get(currentMp3Position).getTitle());
+        }
+		intent.putExtra("album_img", imgName.toString());
+		intent.putExtra("currentPlayMode", currentPlayMode);
+		intent.putExtra("isPlaying", mediaPlayer.isPlaying());
+		sendBroadcast(intent);	
 	}
 
 	/**
@@ -519,10 +543,30 @@ public class Mp3Service extends Service{
 	
 	private void updateMode() {
 		currentPlayMode = (currentPlayMode+1) % 4;
+		
 		Intent intent = new Intent();
 		intent.setAction(INTENT_ACTION_MODE);
 		intent.putExtra("currentPlayMode", currentPlayMode);
 		sendBroadcast(intent);
+		
+		StringBuilder msg = new StringBuilder();
+		switch (currentPlayMode) {
+		case Mp3Service.MODE_LIST_LOOP:
+			msg.append("列表循环");
+			break;
+		case Mp3Service.MODE_RANDOM:
+			msg.append("随机播放");
+			break;
+		case Mp3Service.MODE_SEQUENCE:
+			msg.append("顺序播放");
+			break;
+		case Mp3Service.MODE_SINGLE_LOOP:
+			msg.append("单曲循环");
+			break;
+		default:
+			break;
+		}
+		Toast.makeText(getApplicationContext(), msg.toString(), Toast.LENGTH_LONG).show();
 	}
 	
 	private void refreshNotification() {
@@ -534,7 +578,6 @@ public class Mp3Service extends Service{
 	private void play(int currentMp3, int mCurrentDuration) {
 		Log.i(TAG, "play() - [paly current=" + currentMp3 + " mCurrentDuration=" + mCurrentDuration + "]");
 		isPlaying = true;
-		StringBuffer imgName = new StringBuffer();
 		if (currentMp3 != currentMp3Position) {
 			currentProgress = mCurrentDuration;
 			currentMp3Position = currentMp3;
@@ -547,22 +590,23 @@ public class Mp3Service extends Service{
 				e.printStackTrace();
 			}
 			mediaPlayer.prepareAsync();
-			
-	        if (currentMp3Position >= 0 && mp3List.size() > 0) {
-	        	if (mp3List.get(currentMp3Position).getTitle().toUpperCase().contains("ADELE")) {
-	        		imgName.append(mp3List.get(currentMp3Position).getTitle());
-	        	}
-	        }
 		} else {
 			mediaPlayer.seekTo(mCurrentDuration);
 			mediaPlayer.start();
 			updateProgress();
 		}
+			
+		StringBuffer imgName = new StringBuffer();
+        if (currentMp3Position >= 0 && mp3List.size() > 0) {
+        	imgName.append(mp3List.get(currentMp3Position).getTitle());
+        }
 		
 		Intent intent = new Intent();
 		intent.setAction(INTENT_ACTION_PLAY);
 		intent.putExtra("album_img", imgName.toString());
-		intent.putExtra(INTENT_ACTION_PLAY, mp3List.get(currentMp3Position).getTitle());
+		intent.putExtra("song_title", mp3List.get(currentMp3Position).getTitle());
+		intent.putExtra("singer", mp3List.get(currentMp3Position).getArtist());
+		intent.putExtra("album", mp3List.get(currentMp3Position).getAlbum());
 		sendBroadcast(intent);
 		handler.sendEmptyMessage(HANDLER_REFRESH_NOTIFICATION);
 	}

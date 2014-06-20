@@ -1,11 +1,14 @@
 package com.arvin.widget;
 
-import android.appwidget.AppWidgetManager;
+import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 
+import com.arvin.cocoplay.Mp3Service;
+import com.arvin.cocoplay.MyApplication;
 import com.arvin.cocoplay.R;
 
 /**   
@@ -27,29 +30,33 @@ public class MiddleWidgetProvider extends BaseWidgetProvider {
 
 	@Override
 	protected void additionOnReceive() {
-		// TODO Auto-generated method stub
+		if (action.equals(Mp3Service.INTENT_ACTION_MODE)) {
+			int currentMode = baseIntent.getIntExtra("currentPlayMode", 2);
+			updateModeImg(R.id.widget_middle_mode, currentMode);
+		}
 		
-	}
-	
-	@Override
-	public void onReceive(Context context, Intent intent) {
-		Log.i(TAG, "onReceive");
-		super.onReceive(context, intent);
-	}
-	
-	@Override
-	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
-			int[] appWidgetIds) {
-		Log.i(TAG, "onUpdate");
-		super.onUpdate(context, appWidgetManager, appWidgetIds);
+		String singer = baseIntent.getStringExtra("singer");
+		String album = baseIntent.getStringExtra("album");
+		
+		if (singer != null && !singer.trim().equals("")) {
+			views.setTextViewText(R.id.widget_middle_singer, baseIntent.getStringExtra("singer"));
+		}
+		if (album != null && !album.trim().equals("")) {
+			views.setTextViewText(R.id.widget_middle_album, baseIntent.getStringExtra("album"));
+		}
 	}
 
 	@Override
-	protected void additionOnUpdate() {
+	protected void additionOnUpdate(Context context) {
 		views.setOnClickPendingIntent(R.id.widget_middle_op_next, nextPendingIntent);
 		views.setOnClickPendingIntent(R.id.widget_middle_op_playorpause, playOrPausePendingIntent);
 		views.setOnClickPendingIntent(R.id.widget_middle_op_previous, previousPendingIntent);
 		views.setOnClickPendingIntent(R.id.widget_middle_layout, openMainActivityIntent);
+		
+		Intent intent = new Intent(Mp3Service.INTENT_ACTION_CHANGE_SERVICE_MODE);
+		intent.setClass(context, Mp3Service.class);
+		PendingIntent modeSwitchIntent = PendingIntent.getService(context, 0, intent, 0);
+		views.setOnClickPendingIntent(R.id.widget_middle_mode, modeSwitchIntent);
 	}
 
 	@Override

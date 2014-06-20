@@ -13,12 +13,4 @@
             </shape>
         </clip>
     </item>
-    <item android:id="@android:id/secondaryProgress">
-        <clip>
-            <shape>
-            	<gradient android:startColor="@color/claert_red" android:endColor="@color/claert_red" />  
-            </shape>
-        </clip>
-    </item>
-
 </layer-list>

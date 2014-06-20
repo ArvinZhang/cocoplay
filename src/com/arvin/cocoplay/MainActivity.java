@@ -201,6 +201,11 @@ public class MainActivity extends Activity{
 		main_seekBar.setMax(currentSeekMax);
 		main_seekBar.setProgress(playedPosition);
 
+		int currentMode = 2;
+		if (mp3SerBinder != null) {
+			currentMode = mp3SerBinder.bindGetCurrentPlayMode();
+		}
+		updateModeImg(currentMode);
 		registerReceiver();
 		super.onResume();
 	}
@@ -736,7 +741,7 @@ public class MainActivity extends Activity{
 			} else if (Mp3Service.INTENT_ACTION_PAUSE.equals(action) || Mp3Service.INTENT_ACTION_PLAY.equals(action)) {
 				setPlayBtn();
 			} else if (Mp3Service.INTENT_ACTION_MODE.equals(action)) {
-				int currentMode = mp3SerBinder.bindGetCurrentPlayMode();
+				int currentMode = intent.getIntExtra("currentPlayMode", 2);
 				updateModeImg(currentMode);
 			} else if (Mp3Service.INTENT_ACTION_LOAD_IMAGE.equals(action)) {
 				handler.sendEmptyMessage(LOAD_IMAGE);
@@ -745,28 +750,22 @@ public class MainActivity extends Activity{
 	}
 	
 	private void updateModeImg(int mode) {
-		StringBuilder msg = new StringBuilder();
 		switch (mode) {
 		case Mp3Service.MODE_LIST_LOOP:
 			detail_mode_img.setImageResource(R.drawable.ic_player_mode_all);
-			msg.append("列表循环");
 			break;
 		case Mp3Service.MODE_RANDOM:
 			detail_mode_img.setImageResource(R.drawable.ic_player_mode_random);
-			msg.append("随机播放");
 			break;
 		case Mp3Service.MODE_SEQUENCE:
 			detail_mode_img.setImageResource(R.drawable.ic_player_mode_sequence);
-			msg.append("顺序播放");
 			break;
 		case Mp3Service.MODE_SINGLE_LOOP:
 			detail_mode_img.setImageResource(R.drawable.ic_player_mode_single);
-			msg.append("单曲循环");
 			break;
 		default:
 			break;
 		}
-		showToast(msg.toString());
 	}
 	
 	private void showToast(String msg) {
