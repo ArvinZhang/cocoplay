@@ -348,7 +348,7 @@ public class Mp3Service extends Service{
 	private void toInitWidget() {
 		Intent intent = new Intent(INTENT_ACTION_WIDGET_REFREASH);
 		intent.putExtra("progress", mediaPlayer.getCurrentPosition());
-		intent.putExtra("title", mp3List.get(currentMp3Position).getTitle());
+		intent.putExtra("song_title", mp3List.get(currentMp3Position).getTitle());
 		intent.putExtra("maxDuration", maxDuration);
 		intent.putExtra("singer", mp3List.get(currentMp3Position).getArtist());
 		intent.putExtra("album", mp3List.get(currentMp3Position).getAlbum());
