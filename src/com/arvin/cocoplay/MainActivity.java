@@ -184,6 +184,7 @@ public class MainActivity extends Activity{
 		Log.i("MainActivity", "onResume");
 
 		setData(false);
+		setViews(false);
 		if (mp3List.size() > 0) {
 			if (mp3SerBinder != null) {
 				currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
@@ -466,21 +467,8 @@ public class MainActivity extends Activity{
 		refreshableView.setOnRefreshListener(new PullToRefreshListener() {
 			@Override
 			public void onRefresh() {
-				try {
-					Thread.sleep(2000);
-				} catch (InterruptedException e) {
-					e.printStackTrace();
-				} finally {
-					refreshableView.finishRefreshing();
-				}
-			}
-
-			@Override
-			public void onPostExecute() {
-				if (adapter != null) {
-					// doInBackground中不能更新UI，所以放到handler去执行
-					handler.sendEmptyMessage(MP3_REFRESH);
-				}
+				setData(true);
+				handler.sendEmptyMessage(MP3_REFRESH);
 			}
 		}, 0);
 		
@@ -640,6 +628,9 @@ public class MainActivity extends Activity{
 			mp3List = mp3Loader.refreshMp3List();
 		}
 
+	}
+	
+	private void setViews(boolean refresh) {
 		mp3Count = mp3List.size();
 		totalMp3_text.setText("共" + mp3Count + "首歌曲");
 
@@ -662,9 +653,10 @@ public class MainActivity extends Activity{
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
 				case MP3_REFRESH:;
-					setData(true);
 					mp3SerBinder.bindRefreshMp3List();
-					adapter.updateListView(mp3List);
+					setViews(true);
+					
+					refreshableView.finishRefreshing();
 
 					break;
 				case PLAYING_POSITION_CHANGE:
