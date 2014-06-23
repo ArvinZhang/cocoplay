@@ -14,6 +14,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.audiofx.Visualizer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
@@ -207,6 +208,9 @@ public class MainActivity extends Activity{
 		}
 		updateModeImg(currentMode);
 		registerReceiver();
+		Intent intent = new Intent(Mp3Service.INTENT_ACTION_INITIAL_WIDGET);
+		intent.setClass(MainActivity.this, Mp3Service.class);
+		startService(intent);
 		super.onResume();
 	}
 	
@@ -434,8 +438,8 @@ public class MainActivity extends Activity{
 					int position, long id) {
 				// 保存当前正在播放的歌曲位置
 				currentPlayingPosition = position;
-				
-				adapter.notifyDataSetChanged();
+
+				adapter.updateListView(mp3List);	
 				initPlayingLayout(mp3List.get(currentPlayingPosition));
 				if (mp3SerBinder.bindIsPlaying() && position == mp3SerBinder.bindGetCurrentMp3Position()) {
 					mp3SerBinder.bindPause();
@@ -453,7 +457,7 @@ public class MainActivity extends Activity{
 			public void onClick(View v) {
 
 				if (adapter != null) {
-					adapter.notifyDataSetChanged();
+					adapter.updateListView(mp3List);	
 					mp3ListView.smoothScrollToPosition(currentPlayingPosition);
 				}
 			}
@@ -464,14 +468,18 @@ public class MainActivity extends Activity{
 			public void onRefresh() {
 				try {
 					Thread.sleep(2000);
-					if (adapter != null) {
-						// doInBackground中不能更新UI，所以放到handler去执行
-						handler.sendEmptyMessage(MP3_REFRESH);
-					}
 				} catch (InterruptedException e) {
 					e.printStackTrace();
 				} finally {
 					refreshableView.finishRefreshing();
+				}
+			}
+
+			@Override
+			public void onPostExecute() {
+				if (adapter != null) {
+					// doInBackground中不能更新UI，所以放到handler去执行
+					handler.sendEmptyMessage(MP3_REFRESH);
 				}
 			}
 		}, 0);
@@ -548,13 +556,12 @@ public class MainActivity extends Activity{
 	private void playNext() {
 		mp3SerBinder.bindPlayNext();
 		currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
-		adapter.notifyDataSetChanged();
 	}
 	
 	private void playPrevious() {
 		mp3SerBinder.bindPlayPrevious();
 		currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
-		adapter.notifyDataSetChanged();
+		adapter.updateListView(mp3List);	
 	}
 
 	private void initPlayingLayout(final Mp3 mp3) {
@@ -646,7 +653,7 @@ public class MainActivity extends Activity{
 		}else {
 			mp3ListView.setAdapter(adapter);
 		}
-		adapter.notifyDataSetChanged();
+		adapter.updateListView(mp3List);
 	}
 
 	private Handler handler = new Handler() {
@@ -654,18 +661,15 @@ public class MainActivity extends Activity{
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-				case OP_POSITION_CHANGE:
-					adapter.notifyDataSetChanged();
-					break;
-				case MP3_REFRESH:
+				case MP3_REFRESH:;
 					setData(true);
 					mp3SerBinder.bindRefreshMp3List();
-					adapter.notifyDataSetChanged();
+					adapter.updateListView(mp3List);
 
 					break;
 				case PLAYING_POSITION_CHANGE:
 					initPlayingLayout(mp3List.get(currentPlayingPosition));
-					adapter.notifyDataSetChanged();
+					adapter.updateListView(mp3List);;
 					setPlayBtn();
 		    		
 					break;

@@ -57,14 +57,14 @@
 
         <ImageView
             android:id="@+id/playRandom_img"
-            android:layout_width="wrap_content"
+            android:layout_width="40px"
             android:layout_height="match_parent"
             android:layout_toLeftOf="@+id/playRandom_text"
             android:src="@drawable/ic_player_mode_random_default" />
 
         <TextView
             android:id="@+id/playRandom_text"
-            android:layout_width="wrap_content"
+            android:layout_width="200px"
             android:layout_height="match_parent"
             android:layout_centerHorizontal="true"
             android:gravity="center"

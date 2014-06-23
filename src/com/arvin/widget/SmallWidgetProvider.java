@@ -12,7 +12,6 @@ package com.arvin.widget;
 import android.appwidget.AppWidgetManager;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.arvin.cocoplay.R;
@@ -31,20 +30,17 @@ public class SmallWidgetProvider extends BaseWidgetProvider {
 	
 	@Override
 	public void onReceive(Context context, Intent intent) {
-		Log.i(TAG, "onReceive");
 		super.onReceive(context, intent);
 	}
 	
 	@Override
 	public void onUpdate(Context context, AppWidgetManager appWidgetManager,
 			int[] appWidgetIds) {
-		Log.i(TAG, "onUpdate");
 		super.onUpdate(context, appWidgetManager, appWidgetIds);
 	}
 	
 	@Override
 	protected void setRemoteViews(Context context) {
-		Log.i(TAG, "setRemoteViews");
 		this.views = new RemoteViews(context.getPackageName(), R.layout.widget_small);
 	}
 

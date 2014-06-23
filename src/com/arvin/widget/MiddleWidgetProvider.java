@@ -3,12 +3,9 @@ package com.arvin.widget;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.util.Log;
 import android.widget.RemoteViews;
-import android.widget.Toast;
 
 import com.arvin.cocoplay.Mp3Service;
-import com.arvin.cocoplay.MyApplication;
 import com.arvin.cocoplay.R;
 
 /**   
@@ -24,7 +21,6 @@ public class MiddleWidgetProvider extends BaseWidgetProvider {
 
 	@Override
 	protected void setRemoteViews(Context context) {
-		Log.i(TAG, "setRemoteViews");
 		this.views = new RemoteViews(context.getPackageName(), R.layout.widget_middle);
 	}
 

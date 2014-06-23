@@ -7,8 +7,6 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.sax.StartElementListener;
-import android.util.Log;
 import android.widget.RemoteViews;
 
 import com.arvin.cocoplay.MainActivity;
@@ -26,7 +24,6 @@ import com.arvin.tools.Tools;
  * @version V1.0   
  */
 public abstract class BaseWidgetProvider extends AppWidgetProvider {
-	private String TAG = "Mp3WidgetProvider";
     private FileUtils imgUtils;
 	
 	protected RemoteViews views;
@@ -34,7 +31,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 	protected PendingIntent nextPendingIntent;
 	protected PendingIntent previousPendingIntent;
 	protected PendingIntent openMainActivityIntent;
-	protected Class widgetClass;
+	protected Class<?> widgetClass;
 	
 	protected int albumImgId;
 	protected int progressbarId;
@@ -42,7 +39,7 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 	protected int songNameTextId;
 	protected String action;
 	protected Intent baseIntent;
-	protected String timeToShow;
+	protected static String timeToShow;
 	
 	
 	@Override
@@ -78,8 +75,6 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 	}
 	
 	public void setWhenPlay(Context context, Intent intent) {
-		String str = intent.getStringExtra(Mp3Service.INTENT_ACTION_PLAY);
-		Log.i(TAG, "INTENT_ACTION_PLAY onReceive - title:" + str);
 		
 		views.setImageViewResource(playOrPauseButtonId, R.drawable.btn_simple_pause);
 		views.setTextViewText(songNameTextId, intent.getStringExtra("song_title"));
@@ -90,7 +85,6 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 		imgUtils = FileUtils.getInstance(context);
 		if (!imgName.equals("") && imgUtils.isFileExists(imgName)) {
 			bmp = imgUtils.getBitmap(imgName);
-			Log.i(TAG, "play 从文件中获取" + imgName);
 			views.setImageViewBitmap(albumImgId, bmp);
 		} else {
 			views.setImageViewResource(albumImgId, R.drawable.playing_bar_default_avatar);
@@ -112,7 +106,6 @@ public abstract class BaseWidgetProvider extends AppWidgetProvider {
 		timeStrBuilder.append(tools.durationFormat(max));
 		timeToShow = timeStrBuilder.toString();
 		
-		Log.i(TAG, "currentDuration=" + currentDuration + " max=" + max);
 		if (max <= 0) {
 			// 如果indeterminate为true的话，相当于调用
 			// ProgressBar.setMax, ProgressBar.setProgress和ProgressBar.setIndeterminate，

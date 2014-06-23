@@ -6,7 +6,6 @@ import android.content.Context;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.ImageView;
@@ -19,10 +18,12 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 	private String TAG = "SortAdapter";
 	private List<Mp3> list = null;
 	private Context mContext;
+	private int count;
 	
 	public SortAdapter(Context mContext, List<Mp3> list) {
 		this.mContext = mContext;
 		this.list = list;
+		count = list.size();
 	}
 	
 	/**
@@ -31,6 +32,7 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 	 */
 	public void updateListView(List<Mp3> list){
 		this.list = list;
+		count = list.size();
 		notifyDataSetChanged();
 	}
 
@@ -47,7 +49,7 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 	}
 
 	public View getView(int position, View view, ViewGroup arg2) {
-//		Log.i(TAG, "getView() position=" + position);
+		Log.i(TAG, "getView() position=" + position);
 		
 		ViewHolder viewHolder = null;
 		final Mp3 mContent = list.get(position);
@@ -72,19 +74,18 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 			viewHolder = (ViewHolder) view.getTag();
 		}
 		
-		int songSum = this.list.size();
 		StringBuffer numStrBuf = new StringBuffer();
 		int num = position + 1;
-		if (songSum < 10) {
+		if (count < 10) {
 			viewHolder.song_num_text.setText(numStrBuf.append(num));
-		} else if (songSum >= 10 && songSum < 100) {
+		} else if (count >= 10 && count < 100) {
 			if (num >= 10) {
 				viewHolder.song_num_text.setText(numStrBuf.append(num));
 			} else {
 				numStrBuf.append(0);
 				viewHolder.song_num_text.setText(numStrBuf.append(num));
 			}
-		} else if (songSum >= 100) {
+		} else if (count >= 100) {
 			if (num < 10) {
 				numStrBuf.append("00");
 				viewHolder.song_num_text.setText(numStrBuf.append(num));
@@ -115,67 +116,12 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 		singerAndAlbum.append(this.list.get(position).getAlbum());
 		viewHolder.singerAalbum_text.setText(singerAndAlbum);
 		
-//		viewHolder.songOp_img.setOnClickListener(new OnClickListener() {
-//			@Override
-//			public void onClick(View v) {
-//				if (position != MainActivity.currentPosition) {
-//					MainActivity.currentPosition = position;
-//				} else {
-//					MainActivity.currentPosition = -1;
-//				}
-//				notifyDataSetChanged();
-//				//new MainActivity().handler.sendEmptyMessage(MainActivity.OP_POSITION_CHANGE);
-//			}
-//		});
-		
 		if (position != MainActivity.currentPlayingPosition) {
 			viewHolder.playing_img.setVisibility(View.INVISIBLE);
 		} else {
 			viewHolder.playing_img.setVisibility(View.VISIBLE);
 		}
 
-		if (position != MainActivity.currentPosition) {
-			viewHolder.songOp_layout.setVisibility(View.GONE);
-			viewHolder.audio_layout.setClickable(false);
-			viewHolder.setList_layout.setClickable(false);
-			viewHolder.info_layout.setClickable(false);
-			viewHolder.delete_layout.setClickable(false);
-		} else {
-			viewHolder.songOp_layout.setVisibility(View.VISIBLE);
-			viewHolder.audio_layout.setClickable(true);
-			viewHolder.setList_layout.setClickable(true);
-			viewHolder.info_layout.setClickable(true);
-			viewHolder.delete_layout.setClickable(true);
-			
-			viewHolder.audio_layout.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					MainActivity.currentPosition = -1;
-				}
-			});
-			
-			viewHolder.setList_layout.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					MainActivity.currentPosition = -1;
-				}
-			});
-			
-			viewHolder.info_layout.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					MainActivity.currentPosition = -1;
-				}
-			});
-			
-			viewHolder.delete_layout.setOnClickListener(new OnClickListener() {
-				@Override
-				public void onClick(View arg0) {
-					MainActivity.currentPosition = -1;
-				}
-			});
-		}
-		
 		return view;
 
 	}
@@ -206,7 +152,11 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 	 * 根据ListView的当前位置获取分类的首字母的Char ascii值
 	 */
 	public int getSectionForPosition(int position) {
-		return list.get(position).getSortLetters().charAt(0);
+		if (position < list.size()) {
+			return list.get(position).getSortLetters().charAt(0);
+		} else {
+			return 0;
+		}
 	}
 
 	/**

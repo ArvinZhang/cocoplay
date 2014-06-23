@@ -116,7 +116,6 @@ public class Mp3Service extends Service{
 			public void onPrepared(MediaPlayer mp) {
 				Log.i(TAG, "initMediaPlayer-onPreared");
 				mediaPlayer.start();
-				//mediaPlayer.seekTo(currentProgress);
 				updateProgress();
 				Log.v(TAG, "[OnPreparedListener] Start at " + currentMp3Position + " in mode " + currentPlayMode + ", currentDuration : " + currentProgress);
 			}
@@ -346,20 +345,22 @@ public class Mp3Service extends Service{
 	}
 
 	private void toInitWidget() {
-		Intent intent = new Intent(INTENT_ACTION_WIDGET_REFREASH);
-		intent.putExtra("progress", mediaPlayer.getCurrentPosition());
-		intent.putExtra("song_title", mp3List.get(currentMp3Position).getTitle());
-		intent.putExtra("maxDuration", maxDuration);
-		intent.putExtra("singer", mp3List.get(currentMp3Position).getArtist());
-		intent.putExtra("album", mp3List.get(currentMp3Position).getAlbum());
-		StringBuffer imgName = new StringBuffer();
-        if (currentMp3Position >= 0 && mp3List.size() > 0) {
-        	imgName.append(mp3List.get(currentMp3Position).getTitle());
-        }
-		intent.putExtra("album_img", imgName.toString());
-		intent.putExtra("currentPlayMode", currentPlayMode);
-		intent.putExtra("isPlaying", mediaPlayer.isPlaying());
-		sendBroadcast(intent);	
+		if (currentMp3Position >= 0) {
+			Intent intent = new Intent(INTENT_ACTION_WIDGET_REFREASH);
+			intent.putExtra("progress", mediaPlayer.getCurrentPosition());
+			intent.putExtra("song_title", mp3List.get(currentMp3Position).getTitle());
+			intent.putExtra("maxDuration", maxDuration);
+			intent.putExtra("singer", mp3List.get(currentMp3Position).getArtist());
+			intent.putExtra("album", mp3List.get(currentMp3Position).getAlbum());
+			StringBuffer imgName = new StringBuffer();
+	        if (currentMp3Position >= 0 && mp3List.size() > 0) {
+	        	imgName.append(mp3List.get(currentMp3Position).getTitle());
+	        }
+			intent.putExtra("album_img", imgName.toString());
+			intent.putExtra("currentPlayMode", currentPlayMode);
+			intent.putExtra("isPlaying", mediaPlayer.isPlaying());
+			sendBroadcast(intent);	
+		}
 	}
 
 	/**
@@ -515,9 +516,7 @@ public class Mp3Service extends Service{
 	};
 	
 	private void updateCurrentMp3() {
-		if (mediaPlayer != null) {
-			maxDuration = (int) mp3List.get(currentMp3Position).getDuration();
-		}
+		maxDuration = (int) mp3List.get(currentMp3Position).getDuration();
 		
 		Log.i(TAG, "updateCurrentMp3() - maxDuration=" + maxDuration + " title=" + mp3List.get(currentMp3Position).getTitle());
 		Intent intent = new Intent();
@@ -581,6 +580,7 @@ public class Mp3Service extends Service{
 		if (currentMp3 != currentMp3Position) {
 			currentProgress = mCurrentDuration;
 			currentMp3Position = currentMp3;
+
 			handler.sendEmptyMessage(HANDLER_UPDATE_CURRENT_MP3);
 			
 			mediaPlayer.reset();
