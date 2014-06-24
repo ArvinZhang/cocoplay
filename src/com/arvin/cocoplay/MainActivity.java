@@ -14,12 +14,14 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.audiofx.Visualizer;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
+import android.os.Looper;
 import android.os.Message;
+import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
@@ -43,8 +45,6 @@ import android.widget.Toast;
 
 import com.arvin.cocoplay.Mp3Service.Mp3SerBinder;
 import com.arvin.custom.LyricView;
-import com.arvin.custom.RefreshableView;
-import com.arvin.custom.RefreshableView.PullToRefreshListener;
 import com.arvin.custom.SideBar;
 import com.arvin.custom.SideBar.OnTouchingLetterChangedListener;
 import com.arvin.custom.VisualizerView;
@@ -55,9 +55,8 @@ import com.arvin.tools.Tools;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout;
 import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
 
-public class MainActivity extends Activity{
+public class MainActivity extends Activity {
 	private String TAG = "MainActivity";
-	private final static int OP_POSITION_CHANGE = 1;
 	private final static int PLAYING_POSITION_CHANGE = 2;
 	private final static int MP3_REFRESH = 3;
     private final static int ACTIVITY_LOAD_ALBUM_IMAGE = 4;
@@ -89,7 +88,7 @@ public class MainActivity extends Activity{
 	private SideBar sideBar;
 	private TextView dialog;
 	private ListView mp3ListView;
-	private RefreshableView refreshableView;
+	private SwipeRefreshLayout refreshableView;
 	private TextView songName_text;
 	private TextView singer_text;
 	private TextView usedTime_text;
@@ -238,7 +237,30 @@ public class MainActivity extends Activity{
 		mp3ListView = (ListView) findViewById(R.id.songs_list);
 		totalMp3_text = (TextView)footerView.findViewById(R.id.totalMp3_text);
 		mp3ListView.addFooterView(footerView, null, false);
-		refreshableView = (RefreshableView) findViewById(R.id.refreshable_view);
+
+		refreshableView = (SwipeRefreshLayout) findViewById(R.id.refreshable_view);
+		refreshableView.setOnRefreshListener(new OnRefreshListener() {
+			@Override
+			public void onRefresh() {
+				refreshableView.setEnabled(false);
+//				new Thread(new Runnable() {
+//					@Override
+//					public void run() {
+//						Looper.prepare();
+//						setData(true);
+//						mp3SerBinder.bindRefreshMp3List();
+//
+//						handler.sendEmptyMessage(MP3_REFRESH);
+//						Looper.loop();
+//					}
+//				}).start();
+
+				//handler.sendEmptyMessageDelayed(MP3_REFRESH, 3000);	
+			}
+		});
+		refreshableView.setColorScheme(android.R.color.holo_green_dark, android.R.color.holo_green_light,
+				android.R.color.holo_orange_light, android.R.color.holo_red_light);
+		
 		main_seekBar = (SeekBar) findViewById(R.id.main_seekBar);
 		
 		playRandom_layout = (View) findViewById(R.id.playRandom_layout);
@@ -464,13 +486,13 @@ public class MainActivity extends Activity{
 			}
 		});
 
-		refreshableView.setOnRefreshListener(new PullToRefreshListener() {
-			@Override
-			public void onRefresh() {
-				setData(true);
-				handler.sendEmptyMessage(MP3_REFRESH);
-			}
-		}, 0);
+//		refreshableView.setOnRefreshListener(new PullToRefreshListener() {
+//			@Override
+//			public void onRefresh() {
+//				setData(true);
+//				handler.sendEmptyMessage(MP3_REFRESH);
+//			}
+//		}, 0);
 		
 		// 定义seekbar触碰操作，触碰到时暂停，抬起播放
 		main_seekBar.setOnSeekBarChangeListener(new MySeekBarListener());
@@ -652,12 +674,16 @@ public class MainActivity extends Activity{
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-				case MP3_REFRESH:;
+				case MP3_REFRESH:
+					
+					setData(true);
 					mp3SerBinder.bindRefreshMp3List();
 					setViews(true);
 					
-					refreshableView.finishRefreshing();
-
+					showToast("刷新完成^_^");
+					refreshableView.setRefreshing(false);
+					refreshableView.setEnabled(true);
+//					refreshableView.finishRefreshing();
 					break;
 				case PLAYING_POSITION_CHANGE:
 					initPlayingLayout(mp3List.get(currentPlayingPosition));
@@ -913,5 +939,5 @@ public class MainActivity extends Activity{
 		Log.i(TAG, "onStop");
 		super.onStop();
 	}
-	
+
 }

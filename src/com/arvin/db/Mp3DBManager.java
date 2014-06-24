@@ -50,6 +50,8 @@ public class Mp3DBManager {
 				);
 			}
 			db.setTransactionSuccessful();
+		} catch (Exception e) {
+			e.printStackTrace();
 		} finally {
 			db.endTransaction();
 		}
@@ -75,7 +77,9 @@ public class Mp3DBManager {
 			mp3.setUrl(c.getString(c.getColumnIndex("url")));
 			mp3List.add(mp3);
 		}
-		c.close();
+		if (c != null) {
+			c.close();
+		}
 		
 		return mp3List;
 	}

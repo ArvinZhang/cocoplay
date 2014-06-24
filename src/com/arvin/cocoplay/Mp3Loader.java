@@ -67,7 +67,7 @@ public class Mp3Loader {
 		return mp3Loader;
 	}
 
-	private void getMp3ListFromMedia() {
+	private  void getMp3ListFromMedia() {
 		Cursor cursor = contentResolver.query(contentUri, null, null, null, sortStr);
 		Log.i(TAG, "getMp3ListFromMedia");
 
@@ -76,6 +76,7 @@ public class Mp3Loader {
 		} else if (!cursor.moveToFirst()) {
 			Log.v(TAG, "Line(39	)	Music Loader cursor.moveToFirst() returns false.");
 		} else {
+			int i = 0;
 			do {
 				int isMusic = cursor.getInt(cursor
 						.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));
@@ -86,7 +87,7 @@ public class Mp3Loader {
 
 				File mp3File = new File(url);
 
-				Log.i(TAG, cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)));
+				Log.i(TAG, cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)) + "----" + i++);
 
 				if (mp3File.exists() && duration >= MP3_TIME_FILTER) {
 					Mp3 mp3 = new Mp3();

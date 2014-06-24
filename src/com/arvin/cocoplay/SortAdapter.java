@@ -55,8 +55,9 @@ public class SortAdapter extends BaseAdapter implements SectionIndexer{
 		final Mp3 mContent = list.get(position);
 		if (view == null) {
 			Log.i(TAG, "getView() view = null position=" + position);
-			viewHolder = new ViewHolder();
 			view = LayoutInflater.from(mContext).inflate(R.layout.song_list_item, null);
+			
+			viewHolder = new ViewHolder();
 			viewHolder.songCate_text = (TextView) view.findViewById(R.id.songCate_text);
 			viewHolder.itemSongName_text = (TextView) view.findViewById(R.id.itemSongName_text);
 			viewHolder.singerAalbum_text = (TextView) view.findViewById(R.id.singerAalbum_text);
