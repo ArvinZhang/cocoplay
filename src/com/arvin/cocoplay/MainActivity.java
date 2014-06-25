@@ -1,7 +1,10 @@
 package com.arvin.cocoplay;
 
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -14,11 +17,11 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Color;
 import android.media.audiofx.Visualizer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.IBinder;
-import android.os.Looper;
 import android.os.Message;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v4.widget.SwipeRefreshLayout.OnRefreshListener;
@@ -37,6 +40,7 @@ import android.widget.AdapterView;
 import android.widget.AdapterView.OnItemClickListener;
 import android.widget.ImageView;
 import android.widget.ListView;
+import android.widget.ProgressBar;
 import android.widget.RelativeLayout;
 import android.widget.SeekBar;
 import android.widget.SeekBar.OnSeekBarChangeListener;
@@ -57,6 +61,7 @@ import com.sothree.slidinguppanel.SlidingUpPanelLayout.PanelSlideListener;
 
 public class MainActivity extends Activity {
 	private String TAG = "MainActivity";
+	private final static int INIT_VIEWS = 1;
 	private final static int PLAYING_POSITION_CHANGE = 2;
 	private final static int MP3_REFRESH = 3;
     private final static int ACTIVITY_LOAD_ALBUM_IMAGE = 4;
@@ -69,7 +74,7 @@ public class MainActivity extends Activity {
 	public static int currentPlayingPosition = -1;
 	
 	
-	private int playedPosition = 0;
+	private int playedProgress = 0;
 	private int currentSeekMax = 0;
 	private int mp3Count = -1;
 	
@@ -129,6 +134,9 @@ public class MainActivity extends Activity {
 	
 	private Bitmap defBmp;
 	
+	private final Runnable dataRunnable = new DataThread(true);
+	ExecutorService pool;
+	
 	private Mp3SerBinder mp3SerBinder;
 	private ServiceConnection mp3SerConn = new ServiceConnection() {
 		
@@ -163,7 +171,7 @@ public class MainActivity extends Activity {
 
 		ensureOrCreateLyricFolder();
 		initViews();
-
+		pool = Executors.newSingleThreadExecutor();
 	}
 	
 	private void ensureOrCreateLyricFolder() {
@@ -182,31 +190,10 @@ public class MainActivity extends Activity {
 	protected void onResume() {
 		Log.i("MainActivity", "onResume");
 
-		setData(false);
-		setViews(false);
-		if (mp3List.size() > 0) {
-			if (mp3SerBinder != null) {
-				currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
-			}
-			
-			if (currentPlayingPosition >= 0) {
-				initPlayingLayout(mp3List.get(currentPlayingPosition));
-			} else {
-				initPlayingLayout(null);
-			}
-		} else {
-			initPlayingLayout(null);
-			totalMp3_text.setText("共0首歌曲");
-		}
-		
-		main_seekBar.setMax(currentSeekMax);
-		main_seekBar.setProgress(playedPosition);
-
-		int currentMode = 2;
+		new Thread(new DataThread(false)).start();
 		if (mp3SerBinder != null) {
-			currentMode = mp3SerBinder.bindGetCurrentPlayMode();
+			currentPlayingPosition = mp3SerBinder.bindGetCurrentMp3Position();
 		}
-		updateModeImg(currentMode);
 		registerReceiver();
 		Intent intent = new Intent(Mp3Service.INTENT_ACTION_INITIAL_WIDGET);
 		intent.setClass(MainActivity.this, Mp3Service.class);
@@ -243,19 +230,12 @@ public class MainActivity extends Activity {
 			@Override
 			public void onRefresh() {
 				refreshableView.setEnabled(false);
-//				new Thread(new Runnable() {
-//					@Override
-//					public void run() {
-//						Looper.prepare();
-//						setData(true);
-//						mp3SerBinder.bindRefreshMp3List();
-//
-//						handler.sendEmptyMessage(MP3_REFRESH);
-//						Looper.loop();
-//					}
-//				}).start();
-
-				//handler.sendEmptyMessageDelayed(MP3_REFRESH, 3000);	
+				
+//				Thread t = new Thread(dataRunnable);
+//				pool.execute(dataRunnable);
+				new Thread(new DataThread(true)).start();
+//				handler.removeCallbacks(dataRunnable);
+//				handler.postDelayed(t, 3000);
 			}
 		});
 		refreshableView.setColorScheme(android.R.color.holo_green_dark, android.R.color.holo_green_light,
@@ -449,7 +429,7 @@ public class MainActivity extends Activity {
 				// 该字母首次出现的位置
 				int position = adapter.getPositionForSection(s.charAt(0));
 				if (position != -1) {
-					mp3ListView.setSelection(position);
+					mp3ListView.smoothScrollToPosition(position);
 				}
 
 			}
@@ -463,14 +443,14 @@ public class MainActivity extends Activity {
 				currentPlayingPosition = position;
 
 				adapter.updateListView(mp3List);	
-				initPlayingLayout(mp3List.get(currentPlayingPosition));
+				setMp3InfoView();
 				if (mp3SerBinder.bindIsPlaying() && position == mp3SerBinder.bindGetCurrentMp3Position()) {
 					mp3SerBinder.bindPause();
 				} else {
 					if (position != mp3SerBinder.bindGetCurrentMp3Position()) {
-						playedPosition = 0;
+						playedProgress = 0;
 					}
-					mp3SerBinder.bindPlay(currentPlayingPosition, playedPosition);
+					mp3SerBinder.bindPlay(currentPlayingPosition, playedProgress);
 				}
 				setPlayBtn();
 			}
@@ -486,13 +466,6 @@ public class MainActivity extends Activity {
 			}
 		});
 
-//		refreshableView.setOnRefreshListener(new PullToRefreshListener() {
-//			@Override
-//			public void onRefresh() {
-//				setData(true);
-//				handler.sendEmptyMessage(MP3_REFRESH);
-//			}
-//		}, 0);
 		
 		// 定义seekbar触碰操作，触碰到时暂停，抬起播放
 		main_seekBar.setOnSeekBarChangeListener(new MySeekBarListener());
@@ -557,7 +530,7 @@ public class MainActivity extends Activity {
 			if (mp3SerBinder.bindIsPlaying()) {
 				mp3SerBinder.bindPause();
 			} else {
-				mp3SerBinder.bindPlay(currentPlayingPosition, playedPosition);
+				mp3SerBinder.bindPlay(currentPlayingPosition, playedProgress);
 			}
 			setPlayBtn();
 		}
@@ -574,28 +547,6 @@ public class MainActivity extends Activity {
 		adapter.updateListView(mp3List);	
 	}
 
-	private void initPlayingLayout(final Mp3 mp3) {
-		if (mp3 != null) {
-			
-			String fileName = mp3List.get(currentPlayingPosition).getTitle();
-			display(R.id.album_img, fileName, false, defBmp);
-			display(R.id.detail_singer_img, fileName, true, defBmp);
-	
-			songName_text.setText(mp3.getTitle());
-			singer_text.setText(mp3.getArtist());
-			usedTime_text.setText(tools.durationFormat(playedPosition) + " / ");
-			totalTime_text.setText(tools.durationFormat(mp3.getDuration()));
-			detail_time_used.setText(tools.durationFormat(playedPosition));
-			detail_time_total.setText(tools.durationFormat(mp3.getDuration()));
-		} else {
-			usedTime_text.setText("--:-- / ");
-			totalTime_text.setText("--:--");
-			detail_time_used.setText("--:--");
-			detail_time_total.setText("--:--");
-		}
-		
-	}
-	
 	private void display(final int recId, final String fileName, final boolean isBlur, final Bitmap defBmp) {
 		originSingerBitmap = defBmp;
 		
@@ -624,9 +575,48 @@ public class MainActivity extends Activity {
 			handler.sendMessage(msg);
 		}
 	}
+
+	private void setMp3InfoView() {
+		if (mp3List != null && currentPlayingPosition >= 0 && currentPlayingPosition < mp3List.size()) {
+			Mp3 mp3 = mp3List.get(currentPlayingPosition);
+			String imgName = mp3.getTitle();
+			if (imgUtils.isFileExists(imgName)) {
+				album_img.setImageBitmap(imgUtils.getBitmap(imgName));
+			} else {
+				album_img.setImageResource(R.drawable.playing_bar_default_avatar);
+			}
+			
+			songName_text.setText(mp3.getTitle());
+			singer_text.setText(mp3.getArtist());
+		}
+	}
+	
+	private void setTimeViewAndSeekBar() {
+		if (mp3List != null && currentPlayingPosition >= 0 && currentPlayingPosition < mp3List.size()) {
+			Mp3 mp3 = mp3List.get(currentPlayingPosition);
+			usedTime_text.setText(tools.durationFormat(playedProgress) + " / ");
+			totalTime_text.setText(tools.durationFormat(mp3.getDuration()));
+			detail_time_used.setText(tools.durationFormat(playedProgress));
+			detail_time_total.setText(tools.durationFormat(mp3.getDuration()));
+			
+			main_seekBar.setMax((int)mp3.getDuration());
+			main_seekBar.setProgress(playedProgress);
+			
+			detail_seekBar.setMax((int)mp3.getDuration());
+			detail_seekBar.setProgress(playedProgress);
+		}
+	}
+	
+	private void setFooterView() {
+		int mp3Count = 0;
+		if (mp3List != null) {
+			mp3Count = mp3List.size();
+		}
+		totalMp3_text.setText("你有" + mp3Count + "首歌曲");
+	}
 	
 	private void setPlayBtn() {
-		if (mp3SerBinder.bindIsPlaying()) {
+		if (mp3SerBinder != null && mp3SerBinder.bindIsPlaying()) {
 			playApause_btn.setImageResource(R.drawable.btn_pause);
 			detail_play_pause_img.setImageResource(R.drawable.btn_simple_pause);
 		} else {
@@ -634,65 +624,119 @@ public class MainActivity extends Activity {
 			detail_play_pause_img.setImageResource(R.drawable.btn_simple_play);
 		}
 	}
-
-	/**
-	 * 设置数据 当refresh = false 时从cocoplay.db中的获取 当refresh =
-	 * true时从MediaStore.Audio.Media中获取并更新cocoplay.db
-	 * 
-	 * @param refresh
-	 */
-	private void setData(boolean refresh) {
-
-		Log.i("MainActivity", "setDate");
-		if (!refresh) {
-			mp3List = mp3Loader.getMp3List();
-		} else {
-			mp3List = mp3Loader.refreshMp3List();
+	
+	private class DataThread implements Runnable {
+		private boolean refresh;
+		private DataThread() {};
+		
+		private DataThread(boolean refresh) {
+			this.refresh = refresh;
 		}
-
+		
+		public void run() {
+			refreshableView.setRefreshing(false);
+			Log.i(TAG, "isRefresh = " + refreshableView.isRefreshing());
+			
+			Log.i(TAG, Thread.currentThread().getName() + " --- is running");
+			if (!refresh) {
+				mp3List = new ArrayList<Mp3>();
+				List<Mp3> mp3s = mp3Loader.getMp3List();
+				mp3List.addAll(mp3s);
+				handler.sendEmptyMessage(INIT_VIEWS);
+			} else {
+				List<Mp3> mp3sAfterRefresh = mp3Loader.refreshMp3List();
+				Message msg = new Message();
+				msg.what = MP3_REFRESH;
+				Bundle bundle = new Bundle();
+				bundle.putParcelableArrayList("mp3sAfterRefresh", (ArrayList<Mp3>) mp3sAfterRefresh);
+				msg.setData(bundle);
+				handler.sendMessage(msg);
+			}
+		}
 	}
 	
-	private void setViews(boolean refresh) {
-		mp3Count = mp3List.size();
-		totalMp3_text.setText("共" + mp3Count + "首歌曲");
-
-		if (adapter == null) {
-			adapter = new SortAdapter(this, mp3List);
-			mp3ListView.setAdapter(adapter);
-		} else if (refresh) {
-			adapter = null;
-			adapter = new SortAdapter(this, mp3List);
-			mp3ListView.setAdapter(adapter);
-		}else {
-			mp3ListView.setAdapter(adapter);
+	public class DataRefreshAsyncTask extends AsyncTask<Integer, Integer, String> {  
+		List<Mp3> mp3sAfterRefresh;
+	    /**  
+	     * 这里的Integer参数对应AsyncTask中的第一个参数   
+	     * 这里的String返回值对应AsyncTask的第三个参数  
+	     * 该方法并不运行在UI线程当中，主要用于异步操作，所有在该方法中不能对UI当中的空间进行设置和修改  
+	     * 但是可以调用publishProgress方法触发onProgressUpdate对UI进行操作  
+	     */  
+	    @Override  
+	    protected String doInBackground(Integer... params) {  
+			mp3sAfterRefresh = mp3Loader.refreshMp3List();
+	        return "success";  
+	    }  
+	  
+	  
+	    /**  
+	     * 这里的String参数对应AsyncTask中的第三个参数（也就是接收doInBackground的返回值）  
+	     * 在doInBackground方法执行结束之后在运行，并且运行在UI线程当中 可以对UI空间进行设置  
+	     */  
+	    @Override  
+		protected void onPostExecute(String result) {
+			Message msg = new Message();
+			msg.what = MP3_REFRESH;
+			Bundle bundle = new Bundle();
+			bundle.putParcelableArrayList("mp3sAfterRefresh", (ArrayList<Mp3>) mp3sAfterRefresh);
+			msg.setData(bundle);
+			handler.sendMessage(msg);
 		}
-		adapter.updateListView(mp3List);
-	}
+	  
+	  
+	    //该方法运行在UI线程当中,并且运行在UI线程当中 可以对UI空间进行设置  
+	    @Override  
+	    protected void onPreExecute() {  
+	    }  
+	  
+	  
+	    /**  
+	     * 这里的Intege参数对应AsyncTask中的第二个参数  
+	     * 在doInBackground方法当中，，每次调用publishProgress方法都会触发onProgressUpdate执行  
+	     * onProgressUpdate是在UI线程中执行，所有可以对UI空间进行操作  
+	     */  
+	    @Override  
+	    protected void onProgressUpdate(Integer... values) {  
+	    }  
+	}  
 
 	private Handler handler = new Handler() {
 
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
-				case MP3_REFRESH:
-					
-					setData(true);
-					mp3SerBinder.bindRefreshMp3List();
-					setViews(true);
-					
-					showToast("刷新完成^_^");
-					refreshableView.setRefreshing(false);
-					refreshableView.setEnabled(true);
-//					refreshableView.finishRefreshing();
-					break;
+			case INIT_VIEWS:
+				if (adapter != null) {
+					adapter.updateListView(mp3List);
+				} else {
+					adapter = new SortAdapter(MainActivity.this, mp3List);
+					mp3ListView.setAdapter(adapter);
+				}
+				setMp3InfoView();
+				setFooterView();
+				setTimeViewAndSeekBar();
+				setPlayBtn();
+				break;
+			case MP3_REFRESH:
+				Bundle bundle = msg.getData();
+				List<Mp3> mp3sAfterRefresh = (List<Mp3>) bundle.get("mp3sAfterRefresh");
+				adapter.updateListView(mp3sAfterRefresh);
+				mp3List.clear();
+				mp3List.addAll(mp3sAfterRefresh);
+				showToast("刷新成功");
+				refreshableView.setRefreshing(false);
+				refreshableView.setEnabled(true);
+				setFooterView();
+				break;
 				case PLAYING_POSITION_CHANGE:
-					initPlayingLayout(mp3List.get(currentPlayingPosition));
+					setMp3InfoView();
 					adapter.updateListView(mp3List);;
 					setPlayBtn();
 		    		
 					break;
 				case ACTIVITY_LOAD_ALBUM_IMAGE:
-					Bundle bundle = msg.getData();
+					bundle = msg.getData();
 					setDisplayWithBundle(bundle);
 		        	break;
 				case LOAD_IMAGE:
@@ -736,7 +780,7 @@ public class MainActivity extends Activity {
 			if (Mp3Service.ACTION_UDPATE_PROGRESS.equals(action)){
 				int progress = intent.getIntExtra("progress", 0);
 				if (progress > 0){
-					playedPosition = progress;
+					playedProgress = progress;
 					main_seekBar.setProgress(progress);
 					detail_seekBar.setProgress(progress);
 					usedTime_text.setText(tools.durationFormat(progress) + " / ");
