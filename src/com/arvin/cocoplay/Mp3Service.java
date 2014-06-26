@@ -249,9 +249,6 @@ public class Mp3Service extends Service{
        midContentView = new RemoteViews(this.getPackageName(), R.layout.notification);
        final String url = "http://i1217.photobucket.com/albums/dd382/winningprizes/a0f5c39c4b6d4f5b792002a8451898a1.jpg"; 
        if (currentMp3Position >= 0 && mp3List.size() > 0) {
-    	   Log.i(TAG, "setContentView - getTitle:" + mp3List.get(currentMp3Position).getTitle() 
-    			   + " of song:" + mp3List.get(currentMp3Position).getTitle() 
-    			   + " album_id:" + mp3List.get(currentMp3Position).getAlbum_id());
     	   
     	   if (mp3List.get(currentMp3Position).getTitle().toUpperCase().contains("ADELE")) {
     		   StringBuffer imgName = new StringBuffer();

@@ -579,11 +579,13 @@ public class MainActivity extends Activity {
 		if (mp3List != null && currentPlayingPosition >= 0 && currentPlayingPosition < mp3List.size()) {
 			Mp3 mp3 = mp3List.get(currentPlayingPosition);
 			String imgName = mp3.getTitle();
-			if (imgUtils.isFileExists(imgName)) {
-				album_img.setImageBitmap(imgUtils.getBitmap(imgName));
-			} else {
-				album_img.setImageResource(R.drawable.playing_bar_default_avatar);
-			}
+			display(R.id.album_img, imgName, false, defBmp);
+			display(R.id.detail_singer_img, imgName, true, defBmp);
+//			if (imgUtils.isFileExists(imgName)) {
+//				album_img.setImageBitmap(imgUtils.getBitmap(imgName));
+//			} else {
+//				album_img.setImageResource(R.drawable.playing_bar_default_avatar);
+//			}
 			
 			songName_text.setText(mp3.getTitle());
 			singer_text.setText(mp3.getArtist());
@@ -702,7 +704,6 @@ public class MainActivity extends Activity {
 	}  
 
 	private Handler handler = new Handler() {
-
 		@Override
 		public void handleMessage(Message msg) {
 			switch (msg.what) {
@@ -730,22 +731,22 @@ public class MainActivity extends Activity {
 				refreshableView.setEnabled(true);
 				setFooterView();
 				break;
-				case PLAYING_POSITION_CHANGE:
-					setMp3InfoView();
-					adapter.updateListView(mp3List);;
-					setPlayBtn();
-		    		
-					break;
-				case ACTIVITY_LOAD_ALBUM_IMAGE:
-					bundle = msg.getData();
-					setDisplayWithBundle(bundle);
-		        	break;
-				case LOAD_IMAGE:
-					String fileName = mp3List.get(currentPlayingPosition).getTitle();
-					display(R.id.album_img, fileName, false, defBmp);
-					display(R.id.detail_singer_img, fileName, true, defBmp);
-				default:
-					break;
+			case PLAYING_POSITION_CHANGE:
+				setMp3InfoView();
+				adapter.updateListView(mp3List);;
+				setPlayBtn();
+	    		
+				break;
+			case ACTIVITY_LOAD_ALBUM_IMAGE:
+				bundle = msg.getData();
+				setDisplayWithBundle(bundle);
+	        	break;
+			case LOAD_IMAGE:
+				String fileName = mp3List.get(currentPlayingPosition).getTitle();
+				display(R.id.album_img, fileName, false, defBmp);
+				display(R.id.detail_singer_img, fileName, true, defBmp);
+			default:
+				break;
 			}
 		}
 	};
