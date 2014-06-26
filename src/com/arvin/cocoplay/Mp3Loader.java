@@ -78,16 +78,13 @@ public class Mp3Loader {
 		} else {
 			int i = 0;
 			do {
-				int isMusic = cursor.getInt(cursor
-						.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));
-				long duration = cursor.getLong(cursor
-						.getColumnIndex(MediaStore.Audio.Media.DURATION));
-				String url = cursor.getString(cursor
-						.getColumnIndex(MediaStore.Audio.Media.DATA));
+				int isMusic = cursor.getInt(cursor.getColumnIndex(MediaStore.Audio.Media.IS_MUSIC));
+				long duration = cursor.getLong(cursor.getColumnIndex(MediaStore.Audio.Media.DURATION));
+				String url = cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.DATA));
 
 				File mp3File = new File(url);
 
-				Log.i(TAG, cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)) + "----" + i++);
+//				Log.i(TAG, cursor.getString(cursor.getColumnIndex(MediaStore.Audio.Media.TITLE)) + "----" + i++);
 
 				if (mp3File.exists() && duration >= MP3_TIME_FILTER) {
 					Mp3 mp3 = new Mp3();

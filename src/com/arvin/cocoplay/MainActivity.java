@@ -230,12 +230,11 @@ public class MainActivity extends Activity {
 			@Override
 			public void onRefresh() {
 				refreshableView.setEnabled(false);
-				
-//				Thread t = new Thread(dataRunnable);
-//				pool.execute(dataRunnable);
-				new Thread(new DataThread(true)).start();
+				Thread t = new Thread(dataRunnable);
+				pool.execute(t);
+//				new Thread(new DataThread(true)).start();
 //				handler.removeCallbacks(dataRunnable);
-//				handler.postDelayed(t, 3000);
+//				handler.postDelayed(dataRunnable, 3000);
 			}
 		});
 		refreshableView.setColorScheme(android.R.color.holo_green_dark, android.R.color.holo_green_light,
@@ -634,7 +633,6 @@ public class MainActivity extends Activity {
 		}
 		
 		public void run() {
-			refreshableView.setRefreshing(false);
 			Log.i(TAG, "isRefresh = " + refreshableView.isRefreshing());
 			
 			Log.i(TAG, Thread.currentThread().getName() + " --- is running");
@@ -645,6 +643,8 @@ public class MainActivity extends Activity {
 				handler.sendEmptyMessage(INIT_VIEWS);
 			} else {
 				List<Mp3> mp3sAfterRefresh = mp3Loader.refreshMp3List();
+				mp3SerBinder.bindRefreshMp3List();
+				Log.i(TAG, mp3sAfterRefresh.hashCode()+"");
 				Message msg = new Message();
 				msg.what = MP3_REFRESH;
 				Bundle bundle = new Bundle();
@@ -721,9 +721,10 @@ public class MainActivity extends Activity {
 			case MP3_REFRESH:
 				Bundle bundle = msg.getData();
 				List<Mp3> mp3sAfterRefresh = (List<Mp3>) bundle.get("mp3sAfterRefresh");
-				adapter.updateListView(mp3sAfterRefresh);
+				Log.i(TAG, "in handler---" + mp3sAfterRefresh.hashCode());
 				mp3List.clear();
 				mp3List.addAll(mp3sAfterRefresh);
+				adapter.notifyDataSetChanged();
 				showToast("刷新成功");
 				refreshableView.setRefreshing(false);
 				refreshableView.setEnabled(true);
